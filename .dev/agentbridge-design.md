@@ -30,12 +30,12 @@ AgentBridge.Core                 汎用コアライブラリ（UIフレームワ
 │   ├── ChatMessage.cs           プロバイダ非依存のメッセージ表現（各種 ContentPart）
 │   ├── ToolDefinition.cs        プロバイダ非依存のツール定義（名前、説明、InputSchema）
 │   └── ProviderEvent.cs         ストリーミングイベント各種
-├── ConversationLoop.cs          会話ループ処理本体（tool_use 受信 → 実行 → tool_result 送信）
+├── ConversationLoop.cs          会話ループ処理本体（リトライガード・tool 実行・履歴コミット）
 ├── ConversationState.cs         会話履歴とターン排他（TurnLease）の実行コンテキスト
 ├── AssistantTurnBuilder.cs      ProviderEvent から完全なアシスタント応答を組み立てる内部構築器
 ├── IToolHandler.cs              アプリ側が実装するツール処理の拡張インターフェース
 ├── ToolRegistry.cs              ツール定義の管理・一覧提供（ハンドラから Definition 生成）
-├── ToolDispatcher.cs            ツールの実行ディスパッチ、並行制御、リトライ上限ガード
+├── ToolDispatcher.cs            ツールの実行ディスパッチ・並行制御（純粋実行。リトライ状態は持たない）
 ├── ToolResult.cs                実行成否・ToolUseId・LLM/診断メッセージを保持する結果構造体
 ├── IUiThreadMarshaller.cs       UI スレッドへのマーシャリングインターフェース
 └── RetryPolicy.cs               リトライ判定ポリシー（IRetryPolicy / FixedRetryPolicy）
@@ -72,11 +72,14 @@ public interface IToolHandler
 }
 ```
 
+- **`JsonElement input` の寿命（P0）**: `ExecuteAsync` に渡される `input` は **`JsonElement.Clone()` 済み**であり、呼び出し元の `JsonDocument` が Dispose された後もハンドラ内の `await` を跨いで安全に読み取れる。クローン責務は **`ToolDispatcher`**（実行直前に Clone）。
 - **`RequiresUiThread` の意味**:
   - `true`: UI スレッド（STA）上で順次実行する。
   - `false`: **任意のスレッドから安全に実行できる**ことをハンドラが保証する（共有可変状態への同期はハンドラ責務）。フェーズ分離は UI/Non-UI 間の競合を抑止するが、Non-UI 同士の並列安全性までは保証しない。
 - **`ToolDefinition` の生成**: `ToolRegistry.Register(IToolHandler)` 時にハンドラの `ToolName` / `Description` / `InputSchema` から `ToolDefinition` を生成する。利用側が `ToolDefinition` を手で二重定義しないことで、スキーマ不一致を防ぐ。
-- **UI 非ブロッキング規約**: UI ツールハンドラは UI スレッドを長時間占有（ブロッキング）しない。重い処理は別スレッドへ逃がし、UI 操作のみを UI スレッドで行う。`await` 後の継続が UI に戻るかは `SynchronizationContext` に依存するため、ハンドラ実装ガイドで明示する。
+- **ツール名の一意性**: `Register` は同一 `ToolName` の重複登録で例外を投げる。登録解除は MVP では任意。
+- **UI 非ブロッキング規約**: UI ツールハンドラは UI スレッドを長時間占有（ブロッキング）しない。重い処理は別スレッドへ逃がし、UI 操作のみを UI スレッドで行う。
+- **`ConfigureAwait`（P1）**: `RequiresUiThread == true` のハンドラ内では、原則として `.ConfigureAwait(false)` を使わない（UI スレッドへの継続復帰を維持する）。重い処理のみ `Task.Run` でオフロードし、UI コントロール更新の直前で `IUiThreadMarshaller` を明示的に呼ぶ方法も可。
 
 ### 3.1.1 ツール実行結果（`ToolResult`）
 
@@ -101,8 +104,15 @@ public sealed record ToolResult(
 // ファクトリ例
 // ToolResult.Success(toolUseId, content)
 // ToolResult.Failed(toolUseId, errorCode, llmContent, diagnosticDetails?)
-// ToolResult.Cancelled(toolUseId, llmContent: "cancelled")
+// ToolResult.Cancelled(toolUseId, errorCode: "CANCELLED", llmContent: "cancelled")
 ```
+
+**Status 別契約（P1）**:
+- `Success`: `LlmContent` 必須。`ErrorCode` は null。
+- `Failed` / `Cancelled` / `TimedOut`: `ErrorCode` 必須。`LlmContent` には LLM 向け短文（理由の要約）を入れる。
+
+**長大コンテンツの切り詰め（P1）**:
+- `ConversationOptions.MaxLlmContentLength`（既定 **30000** 文字）を超える `LlmContent` は、Core ユーティリティで末尾を切り詰め、`[Truncated: output exceeded limit, remaining N characters omitted]` 相当の注記を付与する。履歴コミット前（Loop または結果正規化時）に適用する。
 
 ### 3.2 UI スレッドマーシャラ（`IUiThreadMarshaller`）
 WPF や Avalonia などの UI フレームワークへのスレッド切り替えを抽象化します。
@@ -138,11 +148,11 @@ public interface IRetryPolicy
 ```
 
 - **既定のリトライ種別は LLM self-correction のみ**とする。`ToolDispatcher` が同一呼び出しを内部で即座に再実行する「Tool execution retry」は MVP では行わない。
-- カウント主体は `ConversationLoop`（`ToolDispatcher` ではない）。
+- **カウント主体・実行ガードの主体はともに `ConversationLoop`**（`ToolDispatcher` はリトライ状態を持たない）。
 - **カウント単位**: 同一ターン内の **同一ツール名** ごとに累積する。**引数が異なっていても同一ツールとしてカウント**する。
 - 既定実装（`FixedRetryPolicy`）は同一ターン・同一ツール名で 3 回失敗したら `ShouldRetry == false`。
 - 失敗回数はターン終了でリセットする。
-- **実行ガード（P0）**: `ShouldRetry == false` になったツールを LLM が再度 `tool_use` した場合、メタ指示に頼らず **ハンドラを実行せず** 即座に `ToolResult.Failed(..., "RETRY_LIMIT_EXCEEDED", ...)` を返す（§4.4）。
+- **実行ガード（P0）**: `ShouldRetry == false` のツール名を LLM が再度 `tool_use` した場合、Loop がハンドラを実行せず `RETRY_LIMIT_EXCEEDED` の `ToolResult` を自前生成する。超過分は Dispatcher に渡さない（§4.2 / §4.4）。
 
 ---
 
@@ -178,13 +188,25 @@ public sealed record AssistantTurn(
     UsageInfo? Usage);
 ```
 
+#### ProviderEvent 終端プロトコル（P0）
+
+1 回の `SendAsync` ストリームについて:
+
+1. **正常系**: 終端は必ず **1 回の `TurnComplete`**。その後のイベントは Loop が無視する（プロバイダ実装のバグ扱いでもよい）。
+2. **失敗系**: 終端は **`ResponseFailed`**（`TurnComplete` と排他）。`ResponseFailed` 後のイベントは無視する。
+3. **キャンセル**: CT 発火により列挙が中断された場合、プロバイダは `TurnComplete` を発火しない。Loop がキャンセル終了として扱う。
+4. **`ToolUseId`**: 同一応答内で一意。`ToolCallRequested` の引数は完全にパース済みであること。
+5. **`ToolCallStarted` は任意**: `ToolCallRequested` のみのプロバイダも許可する（UI の早期表示用）。
+6. **`ToolCallParseFailed`（MaxTokens 切断等）**: ハンドラは実行しない。`TurnComplete` 到達時、当該 ID についてアシスタント側に tool_use 相当を残せる形でコミットし、対応する `ToolResult.Failed(..., "JSON_PARSE_ERROR", "Tool call arguments were truncated or invalid JSON.")` を履歴へ付与して LLM の再試行を促す。
+
 #### AssistantTurnBuilder（P0）
 
 `ProviderEvent` だけでは履歴に必要な「1 つのアシスタントメッセージ」を再構築できない。`ConversationLoop` は内部の `AssistantTurnBuilder` で次を行う。
 
-- `TextDelta` / `ReasoningDelta` / `ToolCallStarted` / `ToolCallRequested` を受信順に蓄積する（テキストと Tool Use の順序、複数 Tool Use の並び、`tool_use_id` の一意性を保持）。
-- 引数 JSON の断片はプロバイダ実装側でバッファし、完成時のみ `ToolCallRequested` を出す（既存方針）。
-- **`TurnComplete` を受けたときだけ** `AssistantTurn` を確定し、ターン所有者（`ConversationTurnLease`）経由で履歴へコミットする。
+- `TextDelta` / `ReasoningDelta` / `ToolCallStarted` / `ToolCallRequested` / `ToolCallParseFailed` を受信順に蓄積する。
+- 引数 JSON の断片はプロバイダ実装側でバッファし、完成時のみ `ToolCallRequested` を出す。
+- **`TurnComplete` を受けたときだけ** `AssistantTurn` を確定する。
+- **投機実行は行わない（P0）**: `ToolCallRequested` 時点ではツールを起動しない。`TurnComplete` → 履歴へアシスタントコミット → 一括ディスパッチ、の順とする。
 - `ResponseFailed` またはキャンセル時、未完了のビルダ内容は **履歴にコミットしない**（§4.2）。
 
 #### プロバイダ変換責務（P0）
@@ -199,10 +221,8 @@ Core の `ChatMessage` / `ContentPart` / `ToolResult` はプロバイダ非依�
 | 成功結果          | MVP はテキスト（`LlmContent`）。JSON 構造が必要になったら後続で拡張                                                      |
 | 失敗 / キャンセル | プロバイダの `is_error` 相当へマップする                                                                                 |
 
-- **スキーマ検証**: コア側で過度な型制約は課さず、各プロバイダ実装側で非対応の JSON Schema 構文（例: `oneOf` など）を検知した際に `ProviderSchemaException` をスローする実行時検証方式を採用しています。
-- **イベントの粒度**: UI 側には `ToolCallStarted` / `ToolCallRequested`（または `ToolCallParseFailed`）を通知し、ちらつきを防ぐ。
-- **完了と失敗の区別**: 正常終了は `TurnComplete`、途中切断・API エラーは `ResponseFailed`。
-- **OpenAI 互換性**: `AgentBridge.OpenAI` はベース URL やモデル名を外部設定可能とし、互換エンドポイントにも設定のみで接続可能です。
+- **スキーマ検証**: コア側で過度な型制約は課さず、各プロバイダ実装側で非対応の JSON Schema 構文を検知した際に `ProviderSchemaException` をスローする。
+- **OpenAI 互換性**: ベース URL やモデル名を外部設定可能とし、互換エンドポイントにも設定のみで接続可能。
 
 ### 4.2 会話ループ制御（`ConversationLoop`）
 
@@ -210,7 +230,7 @@ Core の `ChatMessage` / `ContentPart` / `ToolResult` はプロバイダ非依�
 
 #### ターン契約と TurnLease（P0）
 
-- **状態の所有権**: 会話履歴（`ConversationState`）は呼び出し元（ViewModel 等）が保持し、`ConversationLoop` 自体はステートレスに保つ。複数タブでは State を分け、Loop インスタンスは共有できる。
+- **状態の所有権**: 会話履歴（`ConversationState`）は呼び出し元が保持し、`ConversationLoop` 自体はステートレス。複数タブでは State を分け、Loop インスタンスは共有できる。
 - **同時ターンは 1 つ**: 同一 `ConversationState` に対して同時に実行できるターンは 1 つだけ。
 - **TurnLease API**: ターンロックは `ConversationState` が所有する。履歴の書き込みは lease 経由のみ。
 
@@ -219,53 +239,92 @@ public sealed class ConversationState
 {
     public IReadOnlyList<ChatMessage> Messages { get; }
 
-    // ロック取得。取得前のキャンセルは可能。解放は DisposeAsync（finally 相当）で必ず行う。
     public Task<ConversationTurnLease> AcquireTurnAsync(CancellationToken ct);
 }
 
 public interface ConversationTurnLease : IAsyncDisposable
 {
     void AppendUserMessage(ChatMessage message);
-    void AppendAssistantMessage(ChatMessage message); // AssistantTurn から構築
-    void AppendToolResults(IReadOnlyList<ToolResult> results); // プロバイダ非依存。送信時にアダプタが変換
+    void AppendAssistantMessage(ChatMessage message);
+    void AppendToolResults(IReadOnlyList<ToolResult> results);
 }
+
+public enum ConversationCompletionReason
+{
+    Completed,
+    Cancelled,
+    MaxLlmCallsExceeded,
+    ProviderFailed
+}
+
+public sealed record ConversationTurnResult(
+    ConversationCompletionReason Reason,
+    UsageInfo? Usage = null);
 ```
 
-- 外部コードによる `Messages` の直接書き換えは原則禁止（生の `List<ChatMessage>` は公開しない）。
-- 未完了ターンへの再入（ロック取得失敗）は `InvalidOperationException`（UI は `IsBusy` が一次防御）。
+- 外部コードによる `Messages` の直接書き換えは原則禁止。
+- 未完了ターンへの再入は `InvalidOperationException`（UI は `IsBusy` が一次防御）。
+- Loop の戻り値は `ConversationTurnResult`。
 
-#### MaxHops / MaxLlmCalls（P0）
+#### 履歴コミット順序（P0）
 
-- **定義**: 当該ターン内で `ILlmProvider.SendAsync` を呼び出せる **最大回数**（初回送信 + tool_result 後の再送信を含む）。名称 `MaxHops` はこの意味で用いる（実装上の別名として `MaxLlmCalls` でもよい）。
-- **既定値**: **10**。超過時はそれ以上 LLM を呼ばず、ターンを打ち切って呼び出し元に完了（打ち切り理由付き）を返す。
+単一の原子 API は強制しない。次の順序契約で整合性を取る。
+
+1. `TurnComplete` 後にのみ `AppendAssistantMessage` を呼ぶ。
+2. ツール実行（および ParseFailed / リトライガード結果の合成）が **全件確定してから** `AppendToolResults` を呼ぶ。
+3. `AppendAssistantMessage` 後にツールが失敗しても、アシスタント側の `tool_use` は履歴に残す（プロバイダが tool_use / tool_result 対を要求するため）。
+4. `AppendAssistantMessage` と `AppendToolResults` の間でキャンセルされた場合も、アシスタントは残し、全 tool_use に対する結果（成功・失敗・Cancelled）を揃えてから `AppendToolResults` する。
+
+#### MaxLlmCalls（P0）
+
+- **名称**: 実装・設定とも **`MaxLlmCalls`** とする（旧称 MaxHops と同義だが判定の曖昧さを避ける）。
+- **定義**: 当該ターン内で `ILlmProvider.SendAsync` を呼び出せる最大回数。
+- **制約**: 最小 **1**、既定 **10**。`0` 以下は不正（オプション検証で拒否）。
+- **判定**: 呼び出し **前** に `if (llmCallCount >= options.MaxLlmCalls)` ならそれ以上呼ばず、`ConversationCompletionReason.MaxLlmCallsExceeded` で返す。呼び出し成功開始後に `llmCallCount++`。
+- **例**: `MaxLlmCalls = 1` なら初回 `SendAsync` のみ（tool_result 後の再送信なし）。
+- 上限到達時も、それまでにコミット済みのユーザー／アシスタント／tool_result は履歴に残す。
+
+#### リトライ上限ガードの配置（P0）
+
+`ConversationLoop` が `calls` を走査し:
+
+- 上限到達ツール名 → 即座に `ToolResult.Failed(..., "RETRY_LIMIT_EXCEEDED", ...)` を生成。
+- 未超過分のみ `ToolDispatcher.ExecuteAllAsync` に渡す。
+- ParseFailed 由来の `JSON_PARSE_ERROR` も Loop が結果合成する（Dispatcher 非経由）。
 
 #### キャンセル契約（P0）
 
-`CancellationToken` が発火した場合の方針を次で固定する。
+1. **LLM ストリーミング**: 即座に中断する（`TurnComplete` なし）。
+2. **実行中ツール**: CT を伝播する。強制 Abort はしない。**完了を待ち、実際の完了結果を採用する**（キャンセル要求後に成功したら `Success` のまま）。
+3. **未開始ツール**: `Cancelled`（`ErrorCode: CANCELLED`）とする。
+4. **履歴**:
+   - アシスタント未コミットのキャンセル → 部分アシスタントは残さない。`TurnCancelled` を UI へ。理由は `Cancelled`。
+   - アシスタントコミット済み → 全 tool_use に対する結果を揃えて `AppendToolResults`。追加の `SendAsync` は行わない。
+5. **UI 整合（`TurnCancelled`）**: 表示済み `TextDelta` の破棄・取り消しを ViewModel が行えるようにする。
+6. **タイムアウト（P1）**: オプションでツール単位の待ち上限。超過時は CT 発火のうえ待ち、なお終わらなければ当該結果を `TimedOut` としうる。強制 Abort はしない。
 
-1. **LLM ストリーミング**: 即座に中断する。
-2. **実行中ツール**: 同一トークンを `ExecuteAsync` に伝える。中断するか安全に完了させるかは各ハンドラの判断に委ねる（強制スレッド Abort は行わない）。
-3. **履歴と tool_result**:
-   - すでにアシスタント側へ `tool_use` を履歴へコミット済みの場合、未完了・キャンセルされた各呼び出しについて `Status: Cancelled` の `ToolResult` を履歴へ書き込む。
-   - そのターンでは **追加の LLM 往復は行わない**。
-   - ストリーミング途中でアシスタントメッセージが未コミットのままキャンセルされた場合、不完全なアシスタントメッセージは履歴に残さない。
-4. **UI との整合（`TurnCancelled`）**: ストリーム中に UI へ流した `TextDelta` 等が履歴に残らない場合、画面とメモリが乖離しうる。Loop は `TurnCancelled`（または同等の完了理由付きイベント）を発火し、ViewModel が表示済みデルタの破棄・取り消し線表示などを行えるようにする。
-5. **タイムアウト（P1・推奨）**: オプションでツール単位の待ち上限を設け、超過時はキャンセル要求を発火したうえで待ち、なお完了しない場合はターンを `TimedOut` として失敗扱いにする。強制 Abort はしない。
+**複数ツール実行中キャンセルの結果規則**:
+
+| 状態                           | 結果                                               |
+| :----------------------------- | :------------------------------------------------- |
+| 未開始（Pending）              | `Cancelled`                                        |
+| 実行中（Running）→ CT 後に完了 | **実際の完了結果**（Success / Failed / Cancelled） |
+| 既に Success / Failed          | そのまま                                           |
 
 ### 4.3 ツール実行と並行制御（`ToolDispatcher`）
 
-LLM から 1 ターン内に複数のツール呼び出し（並列 tool_use）が返された場合、以下のルールに従ってディスパッチします。
+`ToolDispatcher` は **純粋な実行器** とする。リトライ上限判定や ParseFailed 変換は行わない（Loop の責務）。
 
-1. **リトライ上限ガード（P0）**: 当該ターンで既に `ShouldRetry == false` のツール名への呼び出しは、ハンドラを実行せず `RETRY_LIMIT_EXCEEDED` の `ToolResult` を返す（メタ指示より優先する水際防御）。
-2. **`RequiresUiThread` に応じた分岐（既定: フェーズ分離）**:
-   - **Phase 1**: `RequiresUiThread == false` のツールをバックグラウンド並列実行し、**完了を待つ**。並列度は `ToolDispatcherOptions.MaxDegreeOfParallelism`（既定: `Environment.ProcessorCount`）で制限する。
-   - **Phase 2**: `RequiresUiThread == true` のツールを UI スレッド（STA）上で 1 つずつ順次実行する。
-   - UI ツールと Non-UI ツールを同時に走らせない。
-   - **Non-UI 同士**: 並列実行されるため、共有状態へのアクセスは各ハンドラがスレッド安全を保証する。
-   - UI/Non-UI 同時実行はオプトイン。その場合も利用側が並行安全性を保証する。
-3. **失敗の独立性**: あるツールが失敗しても他は中断しない。完了後、失敗分だけエラー結果として LLM へ返す。
-4. **未捕捉例外の変換（P0）**: `ExecuteOneAsync` は try-catch で保護し、未捕捉例外を `UNHANDLED_EXCEPTION` の `ToolResult` に変換する。
-5. **結果の順序整合**: 元のツール呼び出し順に整列して履歴へ反映する。
+1. **`RequiresUiThread` に応じた分岐（既定: フェーズ分離）**:
+   - **Phase 1**: Non-UI を `MaxDegreeOfParallelism`（既定: `Environment.ProcessorCount`）付きで並列実行し、完了を待つ。
+   - **Phase 2**: UI ツールを UI スレッド上で 1 つずつ順次実行する。
+   - **順序逆転のトレードオフ（P1）**: LLM が `[UI, Non-UI]` の順で tool_use を出しても、実行は Non-UI → UI になる。並列 tool_use は独立前提。順序依存がある操作は同一ターンの並列呼び出しにせず、1 往復ずつ実行させる。
+   - **Non-UI 同士**: ハンドラがスレッド安全を保証する。
+   - UI/Non-UI 同時実行は将来の拡張ポイント（オプトイン時は利用側が並行安全性を保証。UI 同士の順序は必ず維持）。
+2. **失敗の独立性**: あるツールが失敗しても他は中断しない。
+3. **未捕捉例外の変換（P0）**: `ExecuteOneAsync` は try-catch で保護し、`UNHANDLED_EXCEPTION` の `ToolResult` に変換する。
+4. **JsonElement Clone（P0）**: `ExecuteAsync` 呼び出し直前に `input.Clone()` する。
+5. **結果の順序整合**: 渡された呼び出し順に整列して返す（Loop がガード結果とマージして履歴へ反映）。
 
 ```csharp
 public sealed class ToolDispatcherOptions
@@ -275,90 +334,91 @@ public sealed class ToolDispatcherOptions
 
 public class ToolDispatcher
 {
+    // リトライ状態は受け取らない。実行可能な calls のみを渡される前提。
     public async Task<IReadOnlyList<ToolResult>> ExecuteAllAsync(
         IReadOnlyList<ToolUsePart> calls, CancellationToken ct)
     {
-        // 1. リトライ上限到達ツールはハンドラ未実行で RETRY_LIMIT_EXCEEDED を返す
-        // 2. Phase 1: Non-UI を MaxDegreeOfParallelism 付きで並列実行して完了待ち
-        // 3. Phase 2: UI を順次実行
-        // 4. MergeInOriginalOrder
+        // Phase 1: Non-UI（並列・並列度制限・Clone 済み input）
+        // Phase 2: UI（順次）
+        // MergeInOriginalOrder
     }
-
-    // ExecuteOneAsync: 未捕捉例外は必ず ToolResult に変換する
 }
 ```
 
 ### 4.4 エラーハンドリングとリトライ
 
-- **アプリ状態の変化への対応**: 対象オブジェクトが変更・削除されていた場合、ドキュメント全体ロックではなく `ELEMENT_NOT_FOUND` 等を返し、LLM の自己修正を促す。
+- **アプリ状態の変化への対応**: `ELEMENT_NOT_FOUND` 等を返し、LLM の自己修正を促す。
 - **リトライ制御（LLM self-correction）**:
-  - `IRetryPolicy`（既定: 同一ターン・同一ツール名 3 回失敗で打ち切り。引数違いは問わない）を `ConversationLoop` が適用する。
-  - `ShouldRetry == false` となった直後の `tool_result` には、既定でメタ指示（「試行上限に達した。他の手段を試すかユーザーに説明すること」）を `LlmContent` に付与する。
-  - **その後も LLM が同名ツールを呼んだ場合**は §4.3 の実行ガードで `RETRY_LIMIT_EXCEEDED` を返す（ハンドラ未実行）。
-  - オプションで当該ターンの残りの往復から `tools` 一覧の一時除外も可能（実装コストは低いが、既定はメタ指示 + 実行ガード）。
-  - 打ち切り時に例外でループを落とさない。
-- **MaxHops との関係**: ツール別リトライ上限に加え、`SendAsync` 回数上限（§4.2）が最終安全弁。
-- **LLM 向け / UI 向け**: `ToolResult.LlmContent` と `DiagnosticDetails` を分離する（§3.1.1）。絶対パス・スタック・秘密情報を LLM 向けに載せない。
+  - `IRetryPolicy` を `ConversationLoop` が適用（同一ターン・同一ツール名、引数違いは問わない）。
+  - `ShouldRetry == false` 直後の結果にはメタ指示を `LlmContent` に付与（既定）。
+  - **再呼び出し時**は Loop の実行ガードで `RETRY_LIMIT_EXCEEDED`（Dispatcher 非経由）。
+  - オプションで `tools` 一時除外も可。例外でループを落とさない。
+- **MaxLlmCalls との関係**: ツール別上限に加え、`SendAsync` 回数上限が最終安全弁。
+- **LLM 向け / UI 向け**: `LlmContent` と `DiagnosticDetails` を分離。機密・スタックを LLM 向けに載せない。切り詰めは §3.1.1。
 
 ### 4.5 WPF 実装の技術的考慮（`DispatcherMarshaller`）
 
-WPF の `Dispatcher` と連携する際は、以下の落とし穴を回避する実装としています。
-
-- **例外の確実な伝播**: `TaskCompletionSource<T>` でラップして例外を補足・再スローする。
-- **`Func<Task<T>>` のアンラップ**: 二重 Task を呼び出し元に露出しない（§3.2）。
-- **同一スレッド呼び出しの最適化**: `_dispatcher.CheckAccess()` で検知し、マーシャリングをバイパスする。
+- **例外の確実な伝播**: `TaskCompletionSource<T>` でラップして再スロー。
+- **`Func<Task<T>>` のアンラップ**: 二重 Task を露出しない（§3.2）。
+- **同一スレッド最適化**: `_dispatcher.CheckAccess()` でバイパス。
 - **キャンセル**: 投入前キャンセルと実行開始後の CT 伝播のみ（§3.2）。
 
 ---
 
 ## 5. バージョニングと拡張方針
 
-- **インターフェースの拡張**: `IToolHandler` などの公開拡張ポイントへメンバーを追加する場合は、C# 8 の **デフォルトインターフェースメソッド（DIM）** を使用する。破壊的変更になりやすいメンバー追加はメジャーバージョンで検討する。
-- **パッケージリリース方針**: `AgentBridge.Core`、`.Anthropic`、`.OpenAI`、`.Wpf` は常に同一のバージョン番号でリリースするロックステップ方式を採用する。
-- **動的ロード機能（将来課題）**: 現状は `ToolRegistry` に登録された全ツール定義を毎回 LLM に提示する。ツール数が 100 件規模に肥大化した場合に限り、`Category` を利用した動的検索・ロードを検討する。
+- **インターフェースの拡張**: 公開拡張ポイントへのメンバー追加は DIM を使用。破壊的変更はメジャーで検討。
+- **パッケージリリース方針**: Core / Anthropic / OpenAI / Wpf はロックステップ版付け。
+- **動的ロード機能（将来課題）**: ツール 100 件規模まで肥大化した場合に `Category` ベースの動的ロードを検討。
 
 ### 5.1 拡張ポイント / 将来課題（Core MVP の必須ではない）
 
-| 項目                               | 扱い               | 方針                                                                                                                          |
-| :--------------------------------- | :----------------- | :---------------------------------------------------------------------------------------------------------------------------- |
-| ツール実行承認（破壊的操作の確認） | 拡張ポイント（P1） | Core に必須ポリシーは置かない。オプションの `IToolApprovalHandler` 等で Confirm / Deny。`RequiresUiThread` は実行許可ではない |
-| 読み取り専用 / 副作用の分類        | ガイドライン       | 利用側で `ToolExecutionPolicy` 相当を付与可。Core の `IToolHandler` 最小面は維持                                              |
-| Undo / トランザクション            | 文書のみ           | Core API 化しない。ハンドラ実装ガイドで示す                                                                                   |
-| Context pruning（履歴切り詰め）    | 将来課題（P2）     | 長大 `tool_result` の切り詰めフックは MVP 後                                                                                  |
-| `ToolHandlerBase<TInput>`          | DX（P2）           | `JsonElement` → `TInput` デシリアライズ基底。MVP ブロッカーではない                                                           |
-| JsonSchema 自動生成                | DX（P2）           | .NET 9 `JsonSchemaExporter` 等で DTO からスキーマを生成するヘルパーを Core ユーティリティとして後追い提供可                   |
-| Reasoning 系の本格対応             | 段階導入           | `ReasoningDelta` はイベント面に先置き済み。履歴への扱いが必要になった時点で拡充                                               |
+| 項目                        | 扱い               | 方針                                                                              |
+| :-------------------------- | :----------------- | :-------------------------------------------------------------------------------- |
+| ツール実行承認              | 拡張ポイント（P1） | 必須ポリシーにしない。`IToolApprovalHandler` 等                                   |
+| 読み取り専用 / 副作用の分類 | ガイドライン       | Core 最小 API は維持                                                              |
+| Undo / トランザクション     | 文書のみ           | Core API 化しない                                                                 |
+| Context pruning（履歴全体） | 将来課題（P2）     | 単発 `LlmContent` 切り詰め（§3.1.1）とは別。履歴要約は MVP 後                     |
+| 永続化 / 再起動復元         | 将来課題（P2）     | Core 型は STJ でシリアライズしやすい DTO とする。`JsonPolymorphic` 必須化はしない |
+| `ToolHandlerBase<TInput>`   | DX（P2）           | デシリアライズ基底                                                                |
+| JsonSchema 自動生成         | DX（P2）           | `JsonSchemaExporter` 等のヘルパー                                                 |
+| Reasoning 本格対応          | 段階導入           | `ReasoningDelta` は先置き済み                                                     |
 
 ---
 
 ## 6. 会話ループ概要（契約まとめ）
 
 ```
-AcquireTurnLease（同一 State で同時ターン不可。解放は DisposeAsync）
+AcquireTurnLease
   → AppendUserMessage
-  → loop while llmCallCount <= MaxHops (SendAsync 回数):
-       SendAsync
-         → AssistantTurnBuilder が ProviderEvent を蓄積
-         → TurnComplete?
-              yes → lease.AppendAssistantMessage(AssistantTurn)
-                    ToolCalls?
-                      yes → リトライ上限ガード
-                            → 通過分のみ ToolDispatcher（Phase1 Non-UI → Phase2 UI）
-                            → lease.AppendToolResults
-                            → continue（self-correction）
-                      no  → ターン正常完了 → ReleaseLease
-              ResponseFailed / Cancel（未コミット）
-                    → 履歴に部分アシスタントを残さない
-                    → TurnCancelled を UI へ通知
-                    → コミット済み tool_use があれば Cancelled の ToolResult を付与
-                    → ReleaseLease（追加 SendAsync なし）
-  → MaxHops 超過 → 打ち切り理由付きで完了 → ReleaseLease
+  → llmCallCount = 0
+  → loop:
+       if llmCallCount >= MaxLlmCalls
+            → return MaxLlmCallsExceeded / ReleaseLease
+       SendAsync（開始後 llmCallCount++）
+         → AssistantTurnBuilder（投機実行なし）
+         → 終端:
+              TurnComplete
+                → AppendAssistantMessage
+                → ToolCalls? 
+                     yes → Loop が blocked（RETRY_LIMIT / JSON_PARSE_ERROR）と runnable に分割
+                           → runnable のみ ToolDispatcher（Phase1 Non-UI → Phase2 UI）
+                           → 全結果確定後 AppendToolResults
+                           → continue（self-correction）
+                     no  → return Completed / ReleaseLease
+              ResponseFailed
+                → 未コミットなら履歴に残さない
+                → return ProviderFailed / ReleaseLease
+              Cancel
+                → 未コミットなら TurnCancelled（UI）・履歴に部分アシスタントなし
+                → コミット済みなら in-flight 完了待ち + Pending は Cancelled → AppendToolResults
+                → return Cancelled（追加 SendAsync なし）/ ReleaseLease
 ```
 
 ### 6.1 MVP 実装の推奨順序（参考）
 
 1. Core データモデル（`ChatMessage` / `ContentPart` / `ToolResult` / `ConversationState` + TurnLease）
-2. Fake `ILlmProvider` で `ConversationLoop` + `AssistantTurnBuilder`（正常系・複数ツール・エラー・キャンセル）
-3. `ToolDispatcher`（フェーズ分離・並列度・例外変換・リトライガード）
-4. Anthropic / OpenAI アダプタ（ストリーム→履歴、`ToolResult` 変換）
+2. Fake `ILlmProvider` で `ConversationLoop` + `AssistantTurnBuilder`（正常系・複数ツール・エラー・キャンセル・MaxLlmCalls・リトライガード）
+3. `ToolDispatcher`（フェーズ分離・並列度・Clone・例外変換）
+4. Anthropic / OpenAI アダプタ（ストリーム→履歴、`ToolResult` 変換、終端プロトコル）
 5. WPF `DispatcherMarshaller`（例外・キャンセル・同一スレッド）
