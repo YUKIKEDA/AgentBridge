@@ -1,0 +1,40 @@
+---
+description: Engineering standards — layout, TFM, analyzers, local build gate
+alwaysApply: true
+---
+
+# Engineering
+
+Agent entry point: `AGENTS.md`. Human-readable source of truth: `CONTRIBUTING.md`. Roadmap: `docs/roadmap.md`. Design: `docs/design.md`.
+
+## Layout
+
+- Implementation under `src/AgentBridge.*`
+- Tests under `tests/AgentBridge.*.Tests` mirroring src 1:1 (Core, Anthropic, OpenAI, Wpf)
+- Samples under `samples/` (optional until M5)
+- Do not put lasting decisions only in `.dev/` (temporary scratch / review drafts)
+
+## Targets
+
+- Libraries/tests (non-WPF): `net10.0`
+- WPF projects: `net10.0-windows`
+- Test framework: xUnit
+
+## Analyzers and format
+
+- Nullable enabled; treat warnings as errors
+- StyleCop.Analyzers + built-in code analysis via shared `Directory.Build.props`
+- Format with `dotnet format` / `.editorconfig`
+- Strict XML docs on public API; do not block tests/internal on doc requirements
+
+## Verification gate
+
+- Prefer `./build.ps1` before merge (restore → format verify → build → test)
+- GitHub Actions workflow may exist but **must not be assumed runnable** while Actions are restricted
+- Do not mark "CI green on GitHub" as Done while Actions are unavailable
+
+## Branches and issues
+
+- Branch: `type/<issue-number>-<slug>`
+- One issue ≈ one PR (M0 may batch foundation work)
+- Issue types: feat / bug / task / spike (see CONTRIBUTING.md)

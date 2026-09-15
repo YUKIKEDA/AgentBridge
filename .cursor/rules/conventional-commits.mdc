@@ -23,9 +23,10 @@ Use one of: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `build`
 
 ## Scope
 
-- English, kebab or short noun (examples: `protocol`, `instrumentation`, `analyzer`, `sample`, `smoke`, `build`, `deps`).
+- English, kebab or short noun.
+- Recommended AgentBridge scopes: `core`, `loop`, `dispatcher`, `anthropic`, `openai`, `wpf`, `build`, `ci`, `docs`, `test`.
+- Other scopes are allowed; the list is not a closed whitelist.
 - Recommended when the change targets a clear area; not mandatory for tiny chores.
-- New scopes are allowed; the example list is not a closed whitelist.
 
 ## Subject
 
