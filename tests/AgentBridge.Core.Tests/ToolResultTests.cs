@@ -53,7 +53,7 @@ public sealed class ToolResultTests
     [InlineData(" ")]
     public void Failed_ErrorCodeが未指定だと例外になること(string? errorCode)
     {
-        Assert.Throws<ArgumentException>(() => ToolResult.Failed("call_1", errorCode!, "reason"));
+        Assert.ThrowsAny<ArgumentException>(() => ToolResult.Failed("call_1", errorCode!, "reason"));
     }
 
     [Theory]
@@ -62,7 +62,7 @@ public sealed class ToolResultTests
     [InlineData(" ")]
     public void Failed_LlmContentが未指定だと例外になること(string? llmContent)
     {
-        Assert.Throws<ArgumentException>(() => ToolResult.Failed("call_1", "SOME_ERROR", llmContent!));
+        Assert.ThrowsAny<ArgumentException>(() => ToolResult.Failed("call_1", "SOME_ERROR", llmContent!));
     }
 
     [Theory]
@@ -71,7 +71,7 @@ public sealed class ToolResultTests
     [InlineData(" ")]
     public void Success_ToolUseIdが未指定だと例外になること(string? toolUseId)
     {
-        Assert.Throws<ArgumentException>(() => ToolResult.Success(toolUseId!, "done"));
+        Assert.ThrowsAny<ArgumentException>(() => ToolResult.Success(toolUseId!, "done"));
     }
 
     [Theory]
@@ -80,6 +80,22 @@ public sealed class ToolResultTests
     [InlineData(" ")]
     public void Success_LlmContentが未指定だと例外になること(string? llmContent)
     {
-        Assert.Throws<ArgumentException>(() => ToolResult.Success("call_1", llmContent!));
+        Assert.ThrowsAny<ArgumentException>(() => ToolResult.Success("call_1", llmContent!));
+    }
+
+    [Fact]
+    public void コンストラクタ_SuccessにErrorCodeを指定すると例外になること()
+    {
+        Assert.ThrowsAny<ArgumentException>(() =>
+            new ToolResult("call_1", ToolExecutionStatus.Success, "done", ErrorCode: "X"));
+    }
+
+    [Theory]
+    [InlineData(ToolExecutionStatus.Failed)]
+    [InlineData(ToolExecutionStatus.Cancelled)]
+    [InlineData(ToolExecutionStatus.TimedOut)]
+    public void コンストラクタ_失敗系ステータスでErrorCodeが未指定だと例外になること(ToolExecutionStatus status)
+    {
+        Assert.ThrowsAny<ArgumentException>(() => new ToolResult("call_1", status, "reason"));
     }
 }
