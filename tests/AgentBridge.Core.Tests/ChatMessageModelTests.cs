@@ -6,7 +6,7 @@ namespace AgentBridge.Core.Tests;
 public sealed class ChatMessageModelTests
 {
     [Fact]
-    public void 前提なし_ユーザーメッセージを作成する_テキスト1件のUserメッセージになる()
+    public void FromUser_文字列を指定するとUserロールのテキストメッセージが生成されること()
     {
         ChatMessage message = ChatMessage.FromUser("hello");
 
@@ -16,7 +16,7 @@ public sealed class ChatMessageModelTests
     }
 
     [Fact]
-    public void テキストとツール呼び出しがある_アシスタントメッセージを作成する_パート順序が保持される()
+    public void FromAssistant_複数のパートを指定したとき順序を保持してメッセージが生成されること()
     {
         using JsonDocument inputDoc = JsonDocument.Parse("""{"q":"test"}""");
 
@@ -35,7 +35,7 @@ public sealed class ChatMessageModelTests
     }
 
     [Fact]
-    public void JSONスキーマがある_ToolDefinitionを作成する_スキーマ要素を保持する()
+    public void ToolDefinition_指定したJSONスキーマや属性を保持してインスタンスが作成されること()
     {
         using JsonDocument schemaDoc = JsonDocument.Parse(
             """{"type":"object","properties":{"q":{"type":"string"}}}""");
