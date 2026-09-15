@@ -4,14 +4,16 @@
 
 ## Related
 
-- Closes #<issue-number>
+Closes #<issue-number>
+
 - Design: docs/design.md
 - Milestone:
 
 <!--
-GitHub に Issue を関連付けるには、URL だけでなく必ず Closing キーワードを使うこと。
-例: Closes #12 / Fixes #12 / Resolves #12
-「Issue: https://github.com/.../issues/12」だけの記載ではサイドバー関連付け・自動クローズがされない。
+GitHub に Issue を関連付けるには Closing キーワードが必須。
+- 有効: 本文中の単独行 `Closes #12`（推奨）/ `Fixes #12` / `Resolves #12`
+- 無効になりやすい: 箇条書きだけ（`- Closes #12`）や URL のみ
+PR 作成後、GitHub UI で Linked issues に Issue が出ていることを確認すること。
 -->
 
 ## Test plan

@@ -21,13 +21,9 @@ Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作�
 
 ## M0 — リポジトリ基盤
 
-**Status:** 作業ツリーに骨格あり。**正規フロー（Issue → ブランチ → PR → 人間マージ）未完了** — 次は GitHub Issue を切ってから PR 化する。
+**Status:** Done（https://github.com/YUKIKEDA/AgentBridge/pull/2 マージ済み）
 
 **Done（受け入れ条件）:** 空の 8 プロジェクトがビルドでき、`build.ps1`（format verify → build → test）がローカルで通る。規約・テンプレ・analyzers が入っている。ソリューションは **`.slnx` のみ**。
-
-**想定 Issue（まとめ可）:**
-
-- `task(build):` M0 基盤（AgentBridge.slnx、8 プロジェクト、analyzers、build.ps1、スモークテスト、開発規約のワークフロー明記）
 ## M1 — Core データモデル + TurnLease
 
 **Done:** メッセージモデル・ToolResult・ConversationState/TurnLease の単体テストが緑（排他・履歴書き換え不可）。

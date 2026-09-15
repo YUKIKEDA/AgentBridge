@@ -49,9 +49,9 @@
 - 推奨 scope: `core`, `loop`, `dispatcher`, `anthropic`, `openai`, `wpf`, `build`, `ci`, `docs`, `test`
 - PR 本文は [`.github/pull_request_template.md`](.github/pull_request_template.md) の見出しを厳密に使用する
 - **Issue の関連付け（必須）:** PR 本文の `## Related` に、GitHub が認識する Closing キーワードを書く。
-  - 必須例: `Closes #12`（または `Fixes #12` / `Resolves #12`）
-  - URL だけ（`https://github.com/.../issues/12`）や「Issue: 12」だけの記載は**不十分**（サイドバーに Linked されず、マージ時クローズもされない）
-  - PR 作成後、GitHub UI で Development / Linked issues に Issue が出ていることを確認する
+  - 推奨: **単独行**で `Closes #12`（または `Fixes #12` / `Resolves #12`）
+  - 箇条書きの `- Closes #12` や URL だけは**関連付けに失敗することがある**
+  - PR 作成後、GitHub UI で Development / Linked issues に Issue が出ていることを確認する（`gh pr view --json closingIssuesReferences` でも可）
 
 ### ラベル（推奨）
 
@@ -86,6 +86,11 @@ docs/roadmap.md
 - フォーマット: **`dotnet format`**（`.editorconfig` 準拠）
 - XML ドキュメントコメント厳格適用は **public API** 向け。テスト・internal で止めない
 - 設定は `Directory.Build.props` と `.editorconfig` に集約し、各 csproj に散らさない
+- **コメント言語:** XML ドキュメントコメントおよび通常コメントは **日本語で統一**する（識別子・型名・公開 API 名は英語のまま）
+- **テストメソッド名:** 日本語で、読みやすい自然文にする。推奨形式は `{対象}_〜すると／したとき〜こと`
+  - 例: `FromUser_文字列を指定するとUserロールのテキストメッセージが生成されること`
+  - 例: `FromAssistant_複数のパートを指定したとき順序を保持してメッセージが生成されること`
+  - 機械的な `前提条件_操作_期待` の羅列は避け、主語・条件・結果が文として通じる名前にする
 
 ## ローカル検証（正本）
 
