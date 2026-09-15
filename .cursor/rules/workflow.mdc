@@ -1,0 +1,33 @@
+---
+description: Mandatory Issue → branch → work → PR → human merge workflow
+alwaysApply: true
+---
+
+# Workflow
+
+Human source of truth: `CONTRIBUTING.md` §必須ワークフロー.
+
+## Required order
+
+1. Create a GitHub Issue (roadmap bullets are backlog candidates only)
+2. Optionally break down tasks and update the Issue (or add child issues)
+3. Create branch `type/<issue-number>-<slug>`
+4. Implement; run `./build.ps1`
+5. Open PR using `.github/pull_request_template.md`
+   - **Must** include `Closes #N` / `Fixes #N` / `Resolves #N` in `## Related` (URL-only is insufficient)
+   - Verify the Issue shows as linked on the PR page
+6. Wait for human review and merge
+7. Repeat
+
+## Forbidden
+
+- Starting implementation (editing product/code/build scaffolding for a milestone) **without an Issue number and branch**
+- Treating `docs/roadmap.md` planned titles as permission to code
+- Opening a PR without a related Issue
+- Opening a PR that does not GitHub-link the Issue via closing keywords
+- Skipping human review/merge expectations when the user asked for the normal process
+
+## Exceptions
+
+- M0-style batching of foundation work is allowed **only after** a single tracking Issue exists that says the batch is intentional.
+- Pure conversation answers that do not change the repo are fine without an Issue.

@@ -6,22 +6,28 @@
 
 ## 進め方
 
-- 1 Issue ≈ 1 PR（M0 のみまとめ可）
+作業順序（必須）:
+
+```text
+Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作成 → 作業 → PR → 人間レビュー・マージ → 繰り返し
+```
+
+詳細は [`CONTRIBUTING.md`](../CONTRIBUTING.md)。ロードマップの箇条書きはバックログ候補であり、**Issue 化されるまで着手しない**。
+
+- 1 Issue ≈ 1 PR（M0 のみまとめ可。その場合も Issue を先に切る）
 - Issue タイプ: `feat` / `bug` / `task` / `spike`
 - ブランチ: `type/<issue号>-<slug>`
-- ローカル検証の正本: ルートの `build.ps1`（GHA は定義済みだが利用制限中のため実行前提にしない）
+- ローカル検証の正本: ルートの `build.ps1`（対象は `AgentBridge.slnx`。GHA は制限中のため実行前提にしない）
 
 ## M0 — リポジトリ基盤
 
-**Done:** 空の 8 プロジェクトがビルドでき、`build.ps1`（format verify → build → test）がローカルで通る。規約・テンプレ・analyzers が入っている。
+**Status:** 作業ツリーに骨格あり。**正規フロー（Issue → ブランチ → PR → 人間マージ）未完了** — 次は GitHub Issue を切ってから PR 化する。
 
-**Issues（予定）:**
+**Done（受け入れ条件）:** 空の 8 プロジェクトがビルドでき、`build.ps1`（format verify → build → test）がローカルで通る。規約・テンプレ・analyzers が入っている。ソリューションは **`.slnx` のみ**。
 
-- `task(build):` ソリューションと src/tests 対称の 8 プロジェクトを作成（net10.0 / Wpf は net10.0-windows）
-- `task(build):` Directory.Build.props + .editorconfig + StyleCop + TreatWarningsAsErrors
-- `task(ci):` build.ps1 と GitHub Actions workflow 定義（実行は制限解除後）
-- `task(docs):` CONTRIBUTING / Issue・PR テンプレの最終調整（必要なら）
+**想定 Issue（まとめ可）:**
 
+- `task(build):` M0 基盤（AgentBridge.slnx、8 プロジェクト、analyzers、build.ps1、スモークテスト、開発規約のワークフロー明記）
 ## M1 — Core データモデル + TurnLease
 
 **Done:** メッセージモデル・ToolResult・ConversationState/TurnLease の単体テストが緑（排他・履歴書き換え不可）。

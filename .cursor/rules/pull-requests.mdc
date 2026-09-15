@@ -26,4 +26,8 @@ Follow `.github/pull_request_template.md` exactly — same section headings:
 - When using `gh pr create`, pass a body that matches this template (PowerShell here-string; see `powershell-shell` rule).
 - Do not invent alternate section names (`## 概要`, etc.).
 - Verification must record local `./build.ps1` when GitHub Actions are unavailable.
+- **Issue link (required):** In `## Related`, include a GitHub closing keyword so the Issue is linked in the PR sidebar:
+  - `Closes #N` or `Fixes #N` or `Resolves #N`
+  - A bare URL to the Issue is **not enough**
+  - After `gh pr create` / `gh pr edit`, verify the Issue appears under Linked issues / Development
 - Full process: `CONTRIBUTING.md`.

@@ -23,4 +23,6 @@ jobs:
           dotnet-version: "10.0.x"
       - name: Local gate script
         shell: pwsh
-        run: ./build.ps1
+        run: |
+          # Uses AgentBridge.slnx via build.ps1 (.sln is not used)
+          ./build.ps1
