@@ -1,0 +1,2 @@
+# Shell scripts must be LF or Ubuntu agents fail with $'\r': command not found
+scripts/*.sh text eol=lf

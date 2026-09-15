@@ -17,7 +17,7 @@ Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作�
 - 1 Issue ≈ 1 PR（M0 のみまとめ可。その場合も Issue を先に切る）
 - Issue タイプ: `feat` / `bug` / `task` / `spike`
 - ブランチ: `type/<issue号>-<slug>`
-- ローカル検証の正本: ルートの `build.ps1`（対象は `AgentBridge.slnx`。GHA は制限中のため実行前提にしない）
+- ローカル検証の正本: ルートの `build.ps1`（対象は `AgentBridge.slnx`。GHA は制限中のため実行前提にしない）。Linux では WPF をビルドできないため `./scripts/verify-linux.sh` を使う（手順は [`setup-agent.md`](setup-agent.md)）
 
 ## M0 — リポジトリ基盤
 

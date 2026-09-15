@@ -39,7 +39,8 @@ Follow `.cursor/rules/workflow.mdc`. Do not implement without Issue + branch + e
 
 ## Verification gate
 
-- Prefer `./build.ps1` before merge (restore → format verify → build → test) on **`AgentBridge.slnx`**
+- Prefer `./build.ps1` before merge (restore → format verify → build → test) on **`AgentBridge.slnx`** (Windows; includes WPF)
+- On Linux, do **not** run `./build.ps1`. Use `./scripts/bootstrap-ubuntu.sh` then `./scripts/verify-linux.sh` (skips WPF). Follow [`docs/setup-agent.md`](docs/setup-agent.md); do not abort the task
 - GitHub Actions workflow may exist but **must not be assumed runnable** while Actions are restricted
 - Do not mark "CI green on GitHub" as Done while Actions are unavailable
 

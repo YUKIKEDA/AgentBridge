@@ -5,6 +5,8 @@
 ## Docs
 
 - エージェント入口: [`AGENTS.md`](AGENTS.md)
+- 人間向けセットアップ: [`docs/setup.md`](docs/setup.md)
+- エージェント向けセットアップ: [`docs/setup-agent.md`](docs/setup-agent.md)
 - 設計: [`docs/design.md`](docs/design.md)
 - ロードマップ: [`docs/roadmap.md`](docs/roadmap.md)
 - 開発規約: [`CONTRIBUTING.md`](CONTRIBUTING.md)
@@ -13,8 +15,17 @@
 
 GitHub Actions が使えない場合があるため、検証の正本はローカルです。
 
+Windows（ソリューション全体、WPF 含む）:
+
 ```powershell
 ./build.ps1
+```
+
+Linux（Core / Anthropic / OpenAI のみ。WPF はビルドできない）:
+
+```bash
+./scripts/bootstrap-ubuntu.sh
+./scripts/verify-linux.sh
 ```
 
 ## Process
