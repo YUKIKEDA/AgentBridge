@@ -27,3 +27,5 @@ csharp_style_var_elsewhere = false:suggestion
 # StyleCop: no copyright file header required
 dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1636.severity = none
+# StyleCop: Japanese docs omit trailing 。 / . (see CONTRIBUTING.md)
+dotnet_diagnostic.SA1629.severity = none
