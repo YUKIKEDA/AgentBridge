@@ -1,0 +1,16 @@
+---
+description: Environment bootstrap — do not abort on missing SDK or Linux WPF
+alwaysApply: true
+---
+
+# Environment
+
+If the SDK or verify tools are missing, follow [`docs/setup-agent.md`](docs/setup-agent.md) immediately. Do not stop to ask the user to install them.
+
+- Windows full gate: `./build.ps1` (`AgentBridge.slnx`, includes WPF)
+- Linux: `./scripts/bootstrap-ubuntu.sh` then `./scripts/verify-linux.sh`
+- On Linux, **do not** run `./build.ps1`. WPF (`net10.0-windows`) cannot build; that is expected
+- Ubuntu 24.04: install `dotnet-sdk-10.0` from Ubuntu apt. Do **not** add packages.microsoft.com for .NET
+- Keep proxy environment variables as-is
+
+Human guide: [`docs/setup.md`](docs/setup.md).

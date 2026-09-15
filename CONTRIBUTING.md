@@ -1,6 +1,6 @@
 # Contributing to AgentBridge
 
-この文書は開発規約の**人間向け正本**です。エージェントのエントリポイントは [`AGENTS.md`](AGENTS.md)、強制ルールは `.cursor/rules/` です。設計の正本は [`docs/design.md`](docs/design.md)、実装順序は [`docs/roadmap.md`](docs/roadmap.md) です。
+この文書は開発規約の**人間向け正本**です。エージェントのエントリポイントは [`AGENTS.md`](AGENTS.md)、強制ルールは `.cursor/rules/` です。設計の正本は [`docs/design.md`](docs/design.md)、実装順序は [`docs/roadmap.md`](docs/roadmap.md) です。環境構築は人間向け [`docs/setup.md`](docs/setup.md)、エージェント向け [`docs/setup-agent.md`](docs/setup-agent.md) です。
 
 `.dev/` はレビュー原稿などの**一時資料**置き場です。決定事項を `.dev/` に残さないでください。
 
@@ -12,7 +12,7 @@
 1. Issue 作成（roadmap の想定タイトルを起点にしてよい）
 2. 必要ならタスク分解 → 同じ Issue を更新、または子 Issue を切る
 3. ブランチ作成: type/<issue号>-<slug>（Issue 番号必須）
-4. 作業（ローカルで ./build.ps1）
+4. 作業（Windows では ./build.ps1。Linux エージェントは docs/setup-agent.md）
 5. PR 作成（テンプレ厳守、Related に Closes #N を書く — URL のみは不可）
 6. 人間レビュー → マージ
 7. 次の Issue へ（繰り返し）
@@ -95,7 +95,7 @@ docs/roadmap.md
 
 ## ローカル検証（正本）
 
-GitHub Actions の workflow はリポジトリに置くが、**利用制限により CI が動かないことがある**。マージ前のゲートはローカルの `build.ps1` とする。
+GitHub Actions の workflow はリポジトリに置くが、**利用制限により CI が動かないことがある**。マージ前のゲートは Windows 上の `build.ps1` とする。
 
 ```powershell
 ./build.ps1
@@ -103,9 +103,13 @@ GitHub Actions の workflow はリポジトリに置くが、**利用制限に�
 
 想定内容: `dotnet restore` → `dotnet format --verify-no-changes` → `dotnet build` → `dotnet test`（失敗時は非ゼロ終了）。対象は **`AgentBridge.slnx`**。
 
+WPF（`net10.0-windows`）を含むため、このスクリプトは **Windows 専用** です。Linux のエージェントは `./build.ps1` を実行せず、[`docs/setup-agent.md`](docs/setup-agent.md) の `./scripts/verify-linux.sh`（Core / Anthropic / OpenAI のみ）を使います。Linux 検証が通っても、マージ前の正本ゲートは Windows の `./build.ps1` のままです。
+
 PR の Verification には、上記を実行した旨を書く。
 
 ## エージェント向け
+
+環境が無い・Linux である場合は、実装の前に [`docs/setup-agent.md`](docs/setup-agent.md) を実行する。セットアップ失敗を理由にセッションを終えてはならない。
 
 詳細な強制事項は次を参照:
 
@@ -114,3 +118,4 @@ PR の Verification には、上記を実行した旨を書く。
 - `.cursor/rules/engineering.mdc`
 - `.cursor/rules/design-docs.mdc`
 - `.cursor/rules/workflow.mdc`
+- `.cursor/rules/setup.mdc`

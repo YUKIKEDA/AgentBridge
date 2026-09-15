@@ -1,5 +1,6 @@
 # Local verification gate (source of truth while GitHub Actions may be restricted).
-# Usage: ./build.ps1
+# Usage: ./build.ps1  (Windows only — solution includes WPF / net10.0-windows)
+# On Linux, use ./scripts/verify-linux.sh instead. Do not run this script there.
 # Exits non-zero on failure.
 
 $ErrorActionPreference = "Stop"
