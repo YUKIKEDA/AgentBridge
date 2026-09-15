@@ -1,19 +1,19 @@
 namespace AgentBridge.Core;
 
 /// <summary>
-/// Role of a chat message in the provider-neutral conversation history.
+/// 会話履歴におけるメッセージの役割（プロバイダ非依存）。.
 /// </summary>
 public enum ChatRole
 {
-    /// <summary>System / developer instructions.</summary>
+    /// <summary>システム／開発者向け指示。.</summary>
     System,
 
-    /// <summary>End-user message.</summary>
+    /// <summary>エンドユーザーのメッセージ。.</summary>
     User,
 
-    /// <summary>Model assistant message (text and/or tool calls).</summary>
+    /// <summary>モデル（アシスタント）のメッセージ（テキストおよび／またはツール呼び出し）。.</summary>
     Assistant,
 
-    /// <summary>Tool execution results associated with prior tool uses.</summary>
+    /// <summary>先行する tool_use に対応するツール実行結果。.</summary>
     Tool,
 }

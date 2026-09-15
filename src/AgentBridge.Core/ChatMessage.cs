@@ -1,19 +1,19 @@
 namespace AgentBridge.Core;
 
 /// <summary>
-/// Provider-neutral chat message composed of ordered content parts.
+/// 順序付きコンテンツパートで構成される、プロバイダ非依存のチャットメッセージ。.
 /// </summary>
-/// <param name="Role">Message role.</param>
-/// <param name="Content">Ordered content parts (text, tool use, tool result, etc.).</param>
+/// <param name="Role">メッセージの役割。.</param>
+/// <param name="Content">コンテンツパートの列（テキスト、ツール呼び出し、ツール結果など）。.</param>
 public sealed record ChatMessage(
     ChatRole Role,
     IReadOnlyList<ContentPart> Content)
 {
     /// <summary>
-    /// Creates a user message with a single text part.
+    /// テキスト1件からなるユーザーメッセージを作成します。.
     /// </summary>
-    /// <param name="text">User text.</param>
-    /// <returns>A user <see cref="ChatMessage"/>.</returns>
+    /// <param name="text">ユーザー入力テキスト。.</param>
+    /// <returns>ユーザー向けの <see cref="ChatMessage"/>。.</returns>
     public static ChatMessage FromUser(string text)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
@@ -21,16 +21,16 @@ public sealed record ChatMessage(
     }
 
     /// <summary>
-    /// Creates an assistant message from content parts.
+    /// コンテンツパート列からアシスタントメッセージを作成します。.
     /// </summary>
-    /// <param name="parts">Ordered content parts.</param>
-    /// <returns>An assistant <see cref="ChatMessage"/>.</returns>
+    /// <param name="parts">順序付きコンテンツパート。.</param>
+    /// <returns>アシスタント向けの <see cref="ChatMessage"/>。.</returns>
     public static ChatMessage FromAssistant(params ContentPart[] parts)
     {
         ArgumentNullException.ThrowIfNull(parts);
         if (parts.Length == 0)
         {
-            throw new ArgumentException("Assistant message requires at least one content part.", nameof(parts));
+            throw new ArgumentException("アシスタントメッセージには1件以上のコンテンツパートが必要です。", nameof(parts));
         }
 
         return new ChatMessage(ChatRole.Assistant, parts);

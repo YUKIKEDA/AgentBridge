@@ -30,6 +30,7 @@ Start here when working in this repository as an agent.
 - Commits / PR titles: Conventional Commits (Japanese subject OK).
 - Local verification gate: `./build.ps1` against **`AgentBridge.slnx`** (no `.sln`).
 - Layout: `src/AgentBridge.*` ↔ `tests/AgentBridge.*.Tests` (1:1), TFM `net10.0` (`net10.0-windows` for WPF).
+- Comments (XML docs / inline) in **Japanese**; test methods named `前提条件_操作_期待する振る舞い`.
 
 ## Current backlog pointer
 

@@ -31,6 +31,8 @@ Follow `.cursor/rules/workflow.mdc`. Do not implement without Issue + branch + e
 - StyleCop.Analyzers + built-in code analysis via shared `Directory.Build.props`
 - Format with `dotnet format` / `.editorconfig`
 - Strict XML docs on public API; do not block tests/internal on doc requirements
+- **Comments:** XML docs and inline comments must be **Japanese** (type/member identifiers stay English)
+- **Test method names:** Japanese in the form `前提条件_操作_期待する振る舞い` (use `前提なし_...` when there is no precondition)
 
 ## Verification gate
 

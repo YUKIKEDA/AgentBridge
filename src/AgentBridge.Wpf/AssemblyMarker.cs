@@ -1,7 +1,7 @@
 namespace AgentBridge.Wpf;
 
 /// <summary>
-/// Marker type for assembly identity and smoke tests.
+/// アセンブリ識別およびスモークテスト用のマーカー型。.
 /// </summary>
 public static class AssemblyMarker
 {

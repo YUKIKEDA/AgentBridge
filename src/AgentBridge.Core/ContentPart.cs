@@ -1,6 +1,6 @@
 namespace AgentBridge.Core;
 
 /// <summary>
-/// Base type for provider-neutral message content parts.
+/// プロバイダ非依存のメッセージコンテンツパートの基底型。.
 /// </summary>
 public abstract record ContentPart;

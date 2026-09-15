@@ -3,11 +3,11 @@ using System.Text.Json;
 namespace AgentBridge.Core;
 
 /// <summary>
-/// Provider-neutral tool definition presented to the LLM.
+/// LLM に提示する、プロバイダ非依存のツール定義。.
 /// </summary>
-/// <param name="Name">Tool name.</param>
-/// <param name="Description">Human/LLM facing description.</param>
-/// <param name="InputSchema">JSON Schema document for tool arguments (not tied to a schema library).</param>
+/// <param name="Name">ツール名。.</param>
+/// <param name="Description">人間／LLM 向けの説明。.</param>
+/// <param name="InputSchema">引数の JSON Schema 文書（特定の Schema ライブラリに非依存）。.</param>
 public sealed record ToolDefinition(
     string Name,
     string Description,

@@ -1,7 +1,7 @@
 namespace AgentBridge.Core;
 
 /// <summary>
-/// Plain text content part.
+/// プレーンテキストのコンテンツパート。.
 /// </summary>
-/// <param name="Text">Text payload.</param>
+/// <param name="Text">テキスト本体。.</param>
 public sealed record TextContentPart(string Text) : ContentPart;

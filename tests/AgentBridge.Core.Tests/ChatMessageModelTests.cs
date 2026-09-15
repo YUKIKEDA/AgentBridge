@@ -6,7 +6,7 @@ namespace AgentBridge.Core.Tests;
 public sealed class ChatMessageModelTests
 {
     [Fact]
-    public void FromUser_creates_text_message()
+    public void 前提なし_ユーザーメッセージを作成する_テキスト1件のUserメッセージになる()
     {
         ChatMessage message = ChatMessage.FromUser("hello");
 
@@ -16,9 +16,8 @@ public sealed class ChatMessageModelTests
     }
 
     [Fact]
-    public void FromAssistant_preserves_text_and_tool_use_order()
+    public void テキストとツール呼び出しがある_アシスタントメッセージを作成する_パート順序が保持される()
     {
-        using JsonDocument schemaDoc = JsonDocument.Parse("""{"type":"object"}""");
         using JsonDocument inputDoc = JsonDocument.Parse("""{"q":"test"}""");
 
         ToolUsePart toolUse = new("call_1", "search", inputDoc.RootElement.Clone());
@@ -36,7 +35,7 @@ public sealed class ChatMessageModelTests
     }
 
     [Fact]
-    public void ToolDefinition_holds_json_schema_element()
+    public void JSONスキーマがある_ToolDefinitionを作成する_スキーマ要素を保持する()
     {
         using JsonDocument schemaDoc = JsonDocument.Parse(
             """{"type":"object","properties":{"q":{"type":"string"}}}""");
