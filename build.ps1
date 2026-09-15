@@ -4,13 +4,12 @@
 
 $ErrorActionPreference = "Stop"
 
-$sln = Get-ChildItem -Path . -Filter *.sln -File -ErrorAction SilentlyContinue |
+$sln = Get-ChildItem -Path . -Filter *.slnx -File -ErrorAction SilentlyContinue |
     Select-Object -First 1
 
 if (-not $sln) {
-    Write-Host "No .sln found yet (expected after M0). Nothing to build."
-    Write-Host "After the solution exists, this script will run: restore → format verify → build → test."
-    exit 0
+    Write-Error "No .slnx found. This repo uses AgentBridge.slnx only (no .sln)."
+    exit 1
 }
 
 $slnPath = $sln.FullName

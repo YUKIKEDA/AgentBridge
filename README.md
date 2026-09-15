@@ -17,9 +17,14 @@ GitHub Actions が使えない場合があるため、検証の正本はロー�
 ./build.ps1
 ```
 
-## Layout (after M0)
+## Process
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md): **Issue → branch → work → PR → human merge**. Do not start milestone work from the roadmap text alone.
+
+## Layout
 
 ```text
+AgentBridge.slnx
 src/AgentBridge.*/
 tests/AgentBridge.*.Tests/
 samples/

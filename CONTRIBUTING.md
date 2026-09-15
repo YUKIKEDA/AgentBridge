@@ -4,22 +4,40 @@
 
 `.dev/` はレビュー原稿などの**一時資料**置き場です。決定事項を `.dev/` に残さないでください。
 
+## 必須ワークフロー（実装の進め方）
+
+コードや規約に手を入れる作業は、**必ず次の順**で進める。Issue なし・ブランチなし・PR なしでの実装着手は禁止。
+
+```text
+1. Issue 作成（roadmap の想定タイトルを起点にしてよい）
+2. 必要ならタスク分解 → 同じ Issue を更新、または子 Issue を切る
+3. ブランチ作成: type/<issue号>-<slug>（Issue 番号必須）
+4. 作業（ローカルで ./build.ps1）
+5. PR 作成（テンプレ厳守、Related に Issue を書く）
+6. 人間レビュー → マージ
+7. 次の Issue へ（繰り返し）
+```
+
+- **エージェントは Issue / ブランチ / PR を飛ばして作業ディレクトリに実装を書き始めてはならない。**
+- M0 のように複数作業を 1 Issue にまとめる例外は、**先にその旨の Issue を切ったうえで**まとめる。
+- ロードマップの「予定 Issue」はバックログ候補であり、**GitHub Issue 化されるまで作業開始シグナルではない。**
+
 ## マイルストーン
 
 実装は `docs/roadmap.md` の **M0〜M5** に従います。
 
-| ID  | 概要                                                                  |
-| --- | --------------------------------------------------------------------- |
-| M0  | リポジトリ基盤（sln / 8 プロジェクト / 規約 / analyzers / build.ps1） |
-| M1  | Core データモデル + TurnLease                                         |
-| M2  | ConversationLoop + FakeProvider + AssistantTurnBuilder                |
-| M3  | ToolDispatcher                                                        |
-| M4  | Anthropic → OpenAI（同一 M 内で直列）                                 |
-| M5  | WPF（Marshaller 優先）                                                |
+| ID | 概要 |
+| ---- | ---- |
+| M0 | リポジトリ基盤（slnx / 8 プロジェクト / 規約 / analyzers / build.ps1） |
+| M1 | Core データモデル + TurnLease |
+| M2 | ConversationLoop + FakeProvider + AssistantTurnBuilder |
+| M3 | ToolDispatcher |
+| M4 | Anthropic → OpenAI（同一 M 内で直列） |
+| M5 | WPF（Marshaller 優先） |
 
 ## Issue と PR
 
-- **1 Issue ≈ 1 PR**（M0 のみ複数作業をまとめてよい）
+- **1 Issue ≈ 1 PR**（M0 のみ複数作業をまとめてよい。その場合も Issue は先に作成）
 - Issue タイプ:
   - **feat** — 利用者に見える能力追加
   - **bug** — 契約違反・不具合修正
@@ -44,6 +62,7 @@
 ## リポジトリ構成
 
 ```text
+AgentBridge.slnx
 src/AgentBridge.{Core,Anthropic,OpenAI,Wpf}/
 tests/AgentBridge.{Core,Anthropic,OpenAI,Wpf}.Tests/   # 実装と 1:1
 samples/                                                 # M5 以降
@@ -51,9 +70,9 @@ docs/design.md
 docs/roadmap.md
 ```
 
+- ソリューション形式: **`.slnx` のみ**（`.sln` は使わない・置かない）
 - ターゲット: **`net10.0`**（WPF / Wpf.Tests は **`net10.0-windows`**）
 - テスト: **xUnit**
-- M0 で上記 8 プロジェクトをすべて作成する（中身は空でも可）
 
 ## コーディング規約
 
@@ -71,7 +90,7 @@ GitHub Actions の workflow はリポジトリに置くが、**利用制限に�
 ./build.ps1
 ```
 
-想定内容: `dotnet restore` → `dotnet format --verify-no-changes` → `dotnet build` → `dotnet test`（失敗時は非ゼロ終了）。
+想定内容: `dotnet restore` → `dotnet format --verify-no-changes` → `dotnet build` → `dotnet test`（失敗時は非ゼロ終了）。対象は **`AgentBridge.slnx`**。
 
 PR の Verification には、上記を実行した旨を書く。
 
@@ -83,3 +102,4 @@ PR の Verification には、上記を実行した旨を書く。
 - `.cursor/rules/pull-requests.mdc`
 - `.cursor/rules/engineering.mdc`
 - `.cursor/rules/design-docs.mdc`
+- `.cursor/rules/workflow.mdc`

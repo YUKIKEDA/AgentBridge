@@ -7,8 +7,13 @@ alwaysApply: true
 
 Agent entry point: `AGENTS.md`. Human-readable source of truth: `CONTRIBUTING.md`. Roadmap: `docs/roadmap.md`. Design: `docs/design.md`.
 
+## Workflow
+
+Follow `.cursor/rules/workflow.mdc`. Do not implement without Issue + branch + eventual PR.
+
 ## Layout
 
+- Solution file: **`AgentBridge.slnx` only** (do not create or keep `.sln`)
 - Implementation under `src/AgentBridge.*`
 - Tests under `tests/AgentBridge.*.Tests` mirroring src 1:1 (Core, Anthropic, OpenAI, Wpf)
 - Samples under `samples/` (optional until M5)
@@ -29,12 +34,12 @@ Agent entry point: `AGENTS.md`. Human-readable source of truth: `CONTRIBUTING.md
 
 ## Verification gate
 
-- Prefer `./build.ps1` before merge (restore → format verify → build → test)
+- Prefer `./build.ps1` before merge (restore → format verify → build → test) on **`AgentBridge.slnx`**
 - GitHub Actions workflow may exist but **must not be assumed runnable** while Actions are restricted
 - Do not mark "CI green on GitHub" as Done while Actions are unavailable
 
 ## Branches and issues
 
 - Branch: `type/<issue-number>-<slug>`
-- One issue ≈ one PR (M0 may batch foundation work)
+- One issue ≈ one PR (M0 may batch foundation work only after an Issue exists)
 - Issue types: feat / bug / task / spike (see CONTRIBUTING.md)
