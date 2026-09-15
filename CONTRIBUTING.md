@@ -13,12 +13,13 @@
 2. 必要ならタスク分解 → 同じ Issue を更新、または子 Issue を切る
 3. ブランチ作成: type/<issue号>-<slug>（Issue 番号必須）
 4. 作業（ローカルで ./build.ps1）
-5. PR 作成（テンプレ厳守、Related に Issue を書く）
+5. PR 作成（テンプレ厳守、Related に Closes #N を書く — URL のみは不可）
 6. 人間レビュー → マージ
 7. 次の Issue へ（繰り返し）
 ```
 
 - **エージェントは Issue / ブランチ / PR を飛ばして作業ディレクトリに実装を書き始めてはならない。**
+- **PR を Issue に GitHub 上で Linked せずに出してはならない**（`Closes #N` / `Fixes #N` / `Resolves #N` を本文に含める。URL だけは不十分）。
 - M0 のように複数作業を 1 Issue にまとめる例外は、**先にその旨の Issue を切ったうえで**まとめる。
 - ロードマップの「予定 Issue」はバックログ候補であり、**GitHub Issue 化されるまで作業開始シグナルではない。**
 
@@ -47,6 +48,10 @@
 - コミット / PR タイトル: [Conventional Commits](.cursor/rules/conventional-commits.mdc)（type/scope は英語、subject は日本語可）
 - 推奨 scope: `core`, `loop`, `dispatcher`, `anthropic`, `openai`, `wpf`, `build`, `ci`, `docs`, `test`
 - PR 本文は [`.github/pull_request_template.md`](.github/pull_request_template.md) の見出しを厳密に使用する
+- **Issue の関連付け（必須）:** PR 本文の `## Related` に、GitHub が認識する Closing キーワードを書く。
+  - 必須例: `Closes #12`（または `Fixes #12` / `Resolves #12`）
+  - URL だけ（`https://github.com/.../issues/12`）や「Issue: 12」だけの記載は**不十分**（サイドバーに Linked されず、マージ時クローズもされない）
+  - PR 作成後、GitHub UI で Development / Linked issues に Issue が出ていることを確認する
 
 ### ラベル（推奨）
 
