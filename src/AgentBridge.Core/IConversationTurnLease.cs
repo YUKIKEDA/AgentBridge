@@ -4,7 +4,7 @@ namespace AgentBridge.Core;
 /// 単一ターンの間だけ有効な、会話履歴への書き込み権限
 /// <see cref="ConversationState.AcquireTurnAsync"/> が返す。<see cref="IAsyncDisposable.DisposeAsync"/> でターンロックを解放する
 /// </summary>
-public interface ConversationTurnLease : IAsyncDisposable
+public interface IConversationTurnLease : IAsyncDisposable
 {
     /// <summary>
     /// ユーザーメッセージを履歴の末尾に追加します

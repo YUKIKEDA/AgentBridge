@@ -83,6 +83,7 @@ docs/roadmap.md
 
 - `Nullable` enable、`TreatWarningsAsErrors`
 - **StyleCop.Analyzers** + 組み込みコード分析
+- **インターフェース名:** 必ず `I` プレフィックスを付ける（例: `IConversationTurnLease`）。`SA1302` は無効化しない
 - フォーマット: **`dotnet format`**（`.editorconfig` 準拠）
 - XML ドキュメントコメント厳格適用は **public API** 向け。テスト・internal で止めない
 - 設定は `Directory.Build.props` と `.editorconfig` に集約し、各 csproj に散らさない

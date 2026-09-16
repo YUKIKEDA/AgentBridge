@@ -239,10 +239,10 @@ public sealed class ConversationState
 {
     public IReadOnlyList<ChatMessage> Messages { get; }
 
-    public Task<ConversationTurnLease> AcquireTurnAsync(CancellationToken ct);
+    public Task<IConversationTurnLease> AcquireTurnAsync(CancellationToken ct);
 }
 
-public interface ConversationTurnLease : IAsyncDisposable
+public interface IConversationTurnLease : IAsyncDisposable
 {
     void AppendUserMessage(ChatMessage message);
     void AppendAssistantMessage(ChatMessage message);

@@ -1,7 +1,7 @@
 namespace AgentBridge.Core;
 
 /// <summary>
-/// 会話履歴とターン排他（<see cref="ConversationTurnLease"/>）を保持する実行コンテキスト
+/// 会話履歴とターン排他（<see cref="IConversationTurnLease"/>）を保持する実行コンテキスト
 /// 状態は呼び出し元が保持し、<c>ConversationLoop</c> 自体はステートレス（複数タブでは State を分け、Loop は共有できる）
 /// </summary>
 public sealed class ConversationState
@@ -11,7 +11,7 @@ public sealed class ConversationState
 
     /// <summary>
     /// Gets これまでに確定した会話履歴（受信順）
-    /// 外部コードはこの列を直接書き換えられない。書き込みは <see cref="ConversationTurnLease"/> 経由のみ
+    /// 外部コードはこの列を直接書き換えられない。書き込みは <see cref="IConversationTurnLease"/> 経由のみ
     /// </summary>
     public IReadOnlyList<ChatMessage> Messages => this.messages.AsReadOnly();
 
@@ -22,7 +22,7 @@ public sealed class ConversationState
     /// <param name="ct">取得前キャンセル用のトークン</param>
     /// <returns>取得したターンロック。<see cref="IAsyncDisposable.DisposeAsync"/> で解放する</returns>
     /// <exception cref="InvalidOperationException">既に進行中のターンがある場合</exception>
-    public Task<ConversationTurnLease> AcquireTurnAsync(CancellationToken ct)
+    public Task<IConversationTurnLease> AcquireTurnAsync(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -31,7 +31,7 @@ public sealed class ConversationState
             throw new InvalidOperationException("既に進行中のターンがあるため、新しいターンを開始できません");
         }
 
-        return Task.FromResult<ConversationTurnLease>(new TurnLease(this));
+        return Task.FromResult<IConversationTurnLease>(new TurnLease(this));
     }
 
     private void Append(ChatMessage message)
@@ -44,7 +44,7 @@ public sealed class ConversationState
         Volatile.Write(ref this.turnActive, 0);
     }
 
-    private sealed class TurnLease(ConversationState state) : ConversationTurnLease
+    private sealed class TurnLease(ConversationState state) : IConversationTurnLease
     {
         private int disposed;
 
@@ -92,7 +92,7 @@ public sealed class ConversationState
         {
             if (Volatile.Read(ref this.disposed) != 0)
             {
-                throw new ObjectDisposedException(nameof(ConversationTurnLease));
+                throw new ObjectDisposedException(nameof(IConversationTurnLease));
             }
         }
     }

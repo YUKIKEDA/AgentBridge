@@ -32,7 +32,7 @@ Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作�
 
 - `feat(core):` ChatMessage / ContentPart / ToolDefinition / ToolUsePart
 - `feat(core):` ToolResult（Status 契約・LlmContent 切り詰め）
-- `feat(core):` ConversationState + ConversationTurnLease
+- `feat(core):` ConversationState + IConversationTurnLease
 - `test(core):` ターン排他と lease 解放
 
 ## M2 — ConversationLoop + FakeProvider + AssistantTurnBuilder

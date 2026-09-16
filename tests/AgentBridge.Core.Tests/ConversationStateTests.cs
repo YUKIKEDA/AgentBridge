@@ -8,7 +8,7 @@ public sealed class ConversationStateTests
     public async Task AcquireTurnAsync_ターン進行中に再度呼ぶとInvalidOperationExceptionになること()
     {
         ConversationState state = new();
-        await using ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
+        await using IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => state.AcquireTurnAsync(CancellationToken.None));
@@ -18,10 +18,10 @@ public sealed class ConversationStateTests
     public async Task AcquireTurnAsync_leaseを解放すると再度ターンを取得できること()
     {
         ConversationState state = new();
-        ConversationTurnLease firstLease = await state.AcquireTurnAsync(CancellationToken.None);
+        IConversationTurnLease firstLease = await state.AcquireTurnAsync(CancellationToken.None);
         await firstLease.DisposeAsync();
 
-        await using ConversationTurnLease secondLease = await state.AcquireTurnAsync(CancellationToken.None);
+        await using IConversationTurnLease secondLease = await state.AcquireTurnAsync(CancellationToken.None);
 
         Assert.NotNull(secondLease);
     }
@@ -43,7 +43,7 @@ public sealed class ConversationStateTests
         ConversationState state = new();
         ChatMessage message = ChatMessage.FromUser("hello");
 
-        await using (ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
+        await using (IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
         {
             lease.AppendUserMessage(message);
         }
@@ -57,7 +57,7 @@ public sealed class ConversationStateTests
         ConversationState state = new();
         ChatMessage assistantMessage = ChatMessage.FromAssistant(new TextContentPart("hi"));
 
-        await using ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
+        await using IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
 
         Assert.Throws<ArgumentException>(() => lease.AppendUserMessage(assistantMessage));
     }
@@ -68,7 +68,7 @@ public sealed class ConversationStateTests
         ConversationState state = new();
         ChatMessage userMessage = ChatMessage.FromUser("hello");
 
-        await using ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
+        await using IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
 
         Assert.Throws<ArgumentException>(() => lease.AppendAssistantMessage(userMessage));
     }
@@ -81,7 +81,7 @@ public sealed class ConversationStateTests
         ChatMessage assistantMessage = ChatMessage.FromAssistant(new TextContentPart("検索します"));
         ToolResult toolResult = ToolResult.Success("call_1", "見つかりました");
 
-        await using (ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
+        await using (IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
         {
             lease.AppendUserMessage(userMessage);
             lease.AppendAssistantMessage(assistantMessage);
@@ -105,7 +105,7 @@ public sealed class ConversationStateTests
         ToolResult first = ToolResult.Success("call_1", "ok1");
         ToolResult second = ToolResult.Failed("call_2", "NOT_FOUND", "ok2");
 
-        await using (ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
+        await using (IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
         {
             lease.AppendToolResults([first, second]);
         }
@@ -121,7 +121,7 @@ public sealed class ConversationStateTests
     public async Task Messages_直接キャストして書き換えようとしても例外になること()
     {
         ConversationState state = new();
-        await using (ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
+        await using (IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None))
         {
             lease.AppendUserMessage(ChatMessage.FromUser("hello"));
         }
@@ -134,7 +134,7 @@ public sealed class ConversationStateTests
     public async Task DisposeAsync_複数回呼んでも例外にならないこと()
     {
         ConversationState state = new();
-        ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
+        IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
 
         await lease.DisposeAsync();
         await lease.DisposeAsync();
@@ -144,7 +144,7 @@ public sealed class ConversationStateTests
     public async Task DisposeAsync_後にAppendすると例外になること()
     {
         ConversationState state = new();
-        ConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
+        IConversationTurnLease lease = await state.AcquireTurnAsync(CancellationToken.None);
         await lease.DisposeAsync();
 
         Assert.Throws<ObjectDisposedException>(() => lease.AppendUserMessage(ChatMessage.FromUser("hello")));
