@@ -43,11 +43,9 @@
 
 **Done:** `DispatcherMarshaller` の例外・キャンセル・同一スレッド・Unwrap のテストが緑。busy / キャンセルで `RunStreamingAsync` を 1 本に制限できる。
 
-**Issues（予定）:**
+**Issues:**
 
-- `feat(wpf):` DispatcherMarshaller（`IUiThreadMarshaller`）
-- `feat(wpf):` 実行状態（IsBusy・キャンセル）
-- `test(wpf):` マーシャラ契約テスト
+- https://github.com/YUKIKEDA/AgentBridge/issues/19 — DispatcherMarshaller、実行状態、契約テスト（本マイルストーンを 1 Issue にまとめる）
 
 ## M4 — samples（最小チャット）
 
