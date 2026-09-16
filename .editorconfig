@@ -29,3 +29,5 @@ dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1636.severity = none
 # StyleCop: Japanese docs omit trailing 。 / . (see CONTRIBUTING.md)
 dotnet_diagnostic.SA1629.severity = none
+# StyleCop: ConversationTurnLease is intentionally named without the "I" prefix (docs/design.md §4.2)
+dotnet_diagnostic.SA1302.severity = none
