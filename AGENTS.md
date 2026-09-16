@@ -11,7 +11,7 @@ If `dotnet --list-sdks` does not show **10.x**, or you are on Linux, follow [`do
 | Windows | `./build.ps1` (full solution, including WPF) |
 | Linux / Ubuntu 24.04 | `./scripts/bootstrap-ubuntu.sh` then `./scripts/verify-linux.sh` |
 
-On Linux, **do not run `./build.ps1`**. WPF (`net10.0-windows`) cannot build there; that error is expected. Continue with Core / Anthropic / OpenAI.
+On Linux, **do not run `./build.ps1`**. WPF (`net10.0-windows`) cannot build there; that error is expected. Continue with Core（M2 以降。移行中は Anthropic / OpenAI プロジェクトが残っている場合がある）。
 
 Human setup: [`docs/setup.md`](docs/setup.md).
 
@@ -20,7 +20,8 @@ Human setup: [`docs/setup.md`](docs/setup.md).
 | Doc | Path | Role |
 | ----- | ----- | ----- |
 | Design | [`docs/design.md`](docs/design.md) | Product/architecture contracts |
-| Roadmap | [`docs/roadmap.md`](docs/roadmap.md) | Milestones M0–M5 and planned issues |
+| ADR | [`docs/adr/`](docs/adr/) | Lasting selection records (e.g. [0001](docs/adr/0001-agent-framework-host.md)) |
+| Roadmap | [`docs/roadmap.md`](docs/roadmap.md) | Milestones M0–M4 and planned issues |
 | Contributing | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Human-readable process & standards |
 | Human setup | [`docs/setup.md`](docs/setup.md) | Windows 開発環境 |
 | Agent setup | [`docs/setup-agent.md`](docs/setup-agent.md) | Bootstrap / Linux verify (do not abort) |

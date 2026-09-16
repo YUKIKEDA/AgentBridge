@@ -2,7 +2,7 @@
 
 正本。実装の順序と Done 条件をここに置く。詳細な受け入れ条件は GitHub Issue 本文に書く。
 
-関連: [design.md](design.md) / [CONTRIBUTING.md](../CONTRIBUTING.md)
+関連: [design.md](design.md) / [ADR 0001](adr/0001-agent-framework-host.md) / [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ## 進め方
 
@@ -19,66 +19,58 @@ Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作�
 - ブランチ: `type/<issue号>-<slug>`
 - ローカル検証の正本: ルートの `build.ps1`（対象は `AgentBridge.slnx`。GHA は制限中のため実行前提にしない）。Linux では WPF をビルドできないため `./scripts/verify-linux.sh` を使う（手順は [`setup-agent.md`](setup-agent.md)）
 
+設計契約の変更は実装 Issue より先にマージする。本ロードマップの M2 以降は [ADR 0001](adr/0001-agent-framework-host.md) マージ後の話である。
+
 ## M0 — リポジトリ基盤
 
 **Status:** Done（https://github.com/YUKIKEDA/AgentBridge/pull/2 マージ済み）
 
-**Done（受け入れ条件）:** 空の 8 プロジェクトがビルドでき、`build.ps1`（format verify → build → test）がローカルで通る。規約・テンプレ・analyzers が入っている。ソリューションは **`.slnx` のみ**。
-## M1 — Core データモデル + TurnLease
+**Done:** 空の 8 プロジェクトがビルドでき、`build.ps1` がローカルで通る。規約・テンプレ・analyzers。ソリューションは **`.slnx` のみ**。
 
-**Done:** メッセージモデル・ToolResult・ConversationState/TurnLease の単体テストが緑（排他・履歴書き換え不可）。
+## M1 — Core データモデル + TurnLease（旧契約。廃棄予定）
 
-**Issues（予定）:**
+**Status:** Done（独自 `ChatMessage` / `ToolResult` / `ConversationState`）
 
-- `feat(core):` ChatMessage / ContentPart / ToolDefinition / ToolUsePart
-- `feat(core):` ToolResult（Status 契約・LlmContent 切り詰め）
-- `feat(core):` ConversationState + IConversationTurnLease
-- `test(core):` ターン排他と lease 解放
+本マイルストーンの成果は [ADR 0001](adr/0001-agent-framework-host.md) により **公開契約ではない**。M2 で削除する。旧型への機能追加はしない。
 
-## M2 — ConversationLoop + FakeProvider + AssistantTurnBuilder
+## M2 — Agent Framework ホスト（Core）
 
-**Done:** FakeProvider で正常系・MaxLlmCalls・キャンセル・リトライガード・ParseFailed のテストが緑。
+**Done:** Core が `IChatClient` から直列ツール実行の `ChatClientAgent` を組み立て、UI 包み済み `AIFunction` を渡せる。M1 独自型と `AgentBridge.Anthropic` / `AgentBridge.OpenAI` プロジェクトを削除する。偽 `IChatClient` でストリーム・ツール直列・キャンセルのテストが緑。
 
 **Issues（予定）:**
 
-- `feat(loop):` AssistantTurnBuilder（TurnComplete でのみコミット）
-- `feat(loop):` ConversationLoop 本体と ConversationTurnResult
-- `feat(loop):` MaxLlmCalls 打ち切り
-- `feat(loop):` リトライ上限ガード（Dispatcher 非経由）
-- `test(loop):` キャンセル契約（複数ツール・UI TurnCancelled）
+- `feat(core):` MEAI / AF 依存とホスト組み立て（直列 invocation、反復上限）
+- `feat(core):` `IUiThreadMarshaller` と `AIFunction` の UI 包み
+- `chore:` M1 独自型の削除、Anthropic / OpenAI プロジェクト削除、`verify-linux.sh` の追従
+- `test(core):` 偽クライアントでツール直列と CT
 
-## M3 — ToolDispatcher
+## M3 — WPF マーシャラと実行状態
 
-**Done:** フェーズ分離・並列度・JsonElement Clone・例外変換のテストが緑。
-
-**Issues（予定）:**
-
-- `feat(dispatcher):` Phase1 Non-UI / Phase2 UI
-- `feat(dispatcher):` MaxDegreeOfParallelism と input.Clone()
-- `feat(dispatcher):` 未捕捉例外 → UNHANDLED_EXCEPTION
-- `test(dispatcher):` 結果順序と失敗の独立性
-
-## M4 — プロバイダアダプタ（Anthropic → OpenAI）
-
-**Done:** 両アダプタで終端プロトコル・ToolResult 変換の契約テスト（または同等の検証）が緑。同一マイルストーン内で **Anthropic 完了後に OpenAI** を直列で進める。
+**Done:** `DispatcherMarshaller` の例外・キャンセル・同一スレッド・Unwrap のテストが緑。busy / キャンセルで `RunStreamingAsync` を 1 本に制限できる。
 
 **Issues（予定）:**
 
-- `feat(anthropic):` ストリーミング → ProviderEvent / AssistantTurn 連携
-- `feat(anthropic):` tool_result 一括変換
-- `feat(openai):` ストリーミングと role:tool 変換
-- `test(anthropic):` / `test(openai):` 終端イベントと異常順序
-
-## M5 — WPF アダプタ
-
-**Done:** DispatcherMarshaller の例外・キャンセル・同一スレッド・Unwrap のテストが緑。チャット UI は最小で可。
-
-**Issues（予定）:**
-
-- `feat(wpf):` DispatcherMarshaller（IUiThreadMarshaller）
+- `feat(wpf):` DispatcherMarshaller（`IUiThreadMarshaller`）
+- `feat(wpf):` 実行状態（IsBusy・キャンセル）
 - `test(wpf):` マーシャラ契約テスト
-- `feat(wpf):` 最小チャット UI（任意・薄い）
 
-## スコープ外（このロードマップではやらない）
+## M4 — samples（最小チャット）
 
-- 必須のツール承認 UI、Undo 基盤、Context pruning、動的ツールロード（設計 §5.1）
+**Done:** サンプルが OpenAI 互換 `IChatClient` とダミー／少数ツールでストリーム表示と Stop ができる。見た目はライブラリに含めない。
+
+**Issues（予定）:**
+
+- `feat(samples):` 最小 WPF チャット（ストリームと Stop）
+- `docs:` サンプルの実行手順
+
+## 後続（このロードマップの M 番号は付けない）
+
+- Claude: Anthropic SDK の `IChatClient` アダプタ
+- Steer ヘルパー、会話永続、承認 UI、`run_python`（設計 §5.1）
+
+## スコープ外（やらない）
+
+- Copilot SDK をランタイムにすること
+- 自前 `ConversationLoop` / `ILlmProvider` / `ToolDispatcher`
+- ライブラリ本体の本格チャット UI
+- 必須の Undo、コンテキスト要約、動的ツールロード
