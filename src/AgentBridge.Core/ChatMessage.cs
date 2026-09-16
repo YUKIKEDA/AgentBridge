@@ -35,4 +35,26 @@ public sealed record ChatMessage(
 
         return new ChatMessage(ChatRole.Assistant, parts);
     }
+
+    /// <summary>
+    /// ツール実行結果の列から Tool ロールのメッセージを作成します
+    /// </summary>
+    /// <param name="results">先行する tool_use に対応するツール実行結果の列</param>
+    /// <returns>Tool ロール向けの <see cref="ChatMessage"/></returns>
+    public static ChatMessage FromToolResults(IReadOnlyList<ToolResult> results)
+    {
+        ArgumentNullException.ThrowIfNull(results);
+        if (results.Count == 0)
+        {
+            throw new ArgumentException("Tool メッセージには1件以上のツール実行結果が必要です。", nameof(results));
+        }
+
+        ContentPart[] parts = new ContentPart[results.Count];
+        for (int i = 0; i < results.Count; i++)
+        {
+            parts[i] = new ToolResultContentPart(results[i]);
+        }
+
+        return new ChatMessage(ChatRole.Tool, parts);
+    }
 }

@@ -31,6 +31,7 @@ Follow `.cursor/rules/workflow.mdc`. Do not implement without Issue + branch + e
 - StyleCop.Analyzers + built-in code analysis via shared `Directory.Build.props`
 - Format with `dotnet format` / `.editorconfig`
 - Strict XML docs on public API; do not block tests/internal on doc requirements
+- **Interface naming:** Interfaces must be prefixed with `I` (e.g. `IConversationTurnLease`). SA1302 stays enabled — do not suppress it
 - **Comments:** XML docs and inline comments must be **Japanese** (type/member identifiers stay English)
 - **Comment punctuation:** Do **not** end XML docs or inline comments with Japanese `。` or English `.` (exception/user-facing strings are out of scope). SA1629 is disabled in `.editorconfig` for this reason
 - **Test method names:** Natural Japanese, preferably `{Target}_〜すると／したとき〜こと`
