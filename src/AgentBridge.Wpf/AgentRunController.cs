@@ -128,19 +128,29 @@ public sealed class AgentRunController : INotifyPropertyChanged, IDisposable
             cts = this.runCts;
         }
 
-        cts?.Cancel();
+        // Cancel のコールバックが EndRun で同じロックを取るため、ロック外で発火する
+        this.TryCancel(cts);
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        this.Cancel();
+        CancellationTokenSource? cts;
+        bool wasBusy;
         lock (this.gate)
         {
-            this.runCts?.Dispose();
-            this.runCts = null;
             this.disposed = true;
+            cts = this.runCts;
+            this.runCts = null;
+            wasBusy = this.isBusy;
             this.isBusy = false;
+        }
+
+        this.TryCancel(cts);
+        cts?.Dispose();
+        if (wasBusy)
+        {
+            this.RaiseIsBusyChanged();
         }
     }
 
@@ -197,5 +207,21 @@ public sealed class AgentRunController : INotifyPropertyChanged, IDisposable
         }
 
         this.PropertyChanged?.Invoke(this, args);
+    }
+
+    private void TryCancel(CancellationTokenSource? cts)
+    {
+        if (cts is null)
+        {
+            return;
+        }
+
+        try
+        {
+            cts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
     }
 }

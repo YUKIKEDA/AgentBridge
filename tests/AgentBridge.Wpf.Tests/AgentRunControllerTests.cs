@@ -106,6 +106,40 @@ public sealed class AgentRunControllerTests
         Assert.False(controller.IsBusy);
     }
 
+    [Fact]
+    public async Task Cancel_Disposeや終了と競合してもObjectDisposedExceptionを投げないこと()
+    {
+        TaskCompletionSource started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        ScriptedChatClient client = new(async (_, _, cancellationToken) =>
+        {
+            started.SetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+            return Text("never");
+        });
+        ChatClientAgent agent = AgentBridgeHost.Create(client);
+        AgentSession session = await agent.CreateSessionAsync();
+        AgentRunController controller = new(agent, session);
+
+        IAsyncEnumerator<AgentResponseUpdate> enumerator = controller.RunStreamingAsync("run").GetAsyncEnumerator();
+        Task<bool> move = enumerator.MoveNextAsync().AsTask();
+        await started.Task;
+
+        Task cancelStorm = Task.Run(() =>
+        {
+            for (int i = 0; i < 200; i++)
+            {
+                controller.Cancel();
+            }
+        });
+
+        controller.Dispose();
+        await cancelStorm;
+        controller.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => move);
+        await enumerator.DisposeAsync();
+    }
+
     private static async Task DrainAsync(IAsyncEnumerable<AgentResponseUpdate> stream)
     {
         await foreach (AgentResponseUpdate update in stream)
