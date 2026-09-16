@@ -1,14 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/AgentBridge.Anthropic/AgentBridge.Anthropic.csproj" />
     <Project Path="src/AgentBridge.Core/AgentBridge.Core.csproj" />
-    <Project Path="src/AgentBridge.OpenAI/AgentBridge.OpenAI.csproj" />
     <Project Path="src/AgentBridge.Wpf/AgentBridge.Wpf.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/AgentBridge.Anthropic.Tests/AgentBridge.Anthropic.Tests.csproj" />
     <Project Path="tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj" />
-    <Project Path="tests/AgentBridge.OpenAI.Tests/AgentBridge.OpenAI.Tests.csproj" />
     <Project Path="tests/AgentBridge.Wpf.Tests/AgentBridge.Wpf.Tests.csproj" />
   </Folder>
 </Solution>

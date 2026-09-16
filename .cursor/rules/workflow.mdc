@@ -1,5 +1,5 @@
 ---
-description: Mandatory Issue → branch → work → PR → human merge workflow
+description: Mandatory grill-if-needed → Issue → branch → work → PR → human merge workflow
 alwaysApply: true
 ---
 
@@ -9,15 +9,21 @@ Human source of truth: `CONTRIBUTING.md` §必須ワークフロー.
 
 ## Required order
 
-1. Create a GitHub Issue (roadmap bullets are backlog candidates only)
-2. Optionally break down tasks and update the Issue (or add child issues)
-3. Create branch `type/<issue-number>-<slug>`
-4. Implement; run `./build.ps1`
-5. Open PR using `.github/pull_request_template.md`
+1. **Grill if needed (before the first Issue):** when the work has branching design/tech/API decisions. Skill: [`.cursor/skills/grill-me/SKILL.md`](../skills/grill-me/SKILL.md). Skip for typos, mechanical deletions that already follow an ADR/design, or simple test-only work.
+2. Create a GitHub Issue (roadmap bullets are backlog candidates only)
+3. **Grill again if needed (after the Issue):** fold answers into the Issue body, or break into child issues
+4. Optionally break down tasks and update the Issue (or add child issues) even without a second grill
+5. Create branch `type/<issue-number>-<slug>`
+6. Implement; run `./build.ps1`
+7. Open PR using `.github/pull_request_template.md`
    - **Must** include `Closes #N` / `Fixes #N` / `Resolves #N` in `## Related` (URL-only is insufficient)
    - Verify the Issue shows as linked on the PR page
-6. Wait for human review and merge
-7. Repeat
+8. Wait for human review and merge
+9. Repeat
+
+```text
+（必要なら grill）→ Issue 作成 →（必要なら分解して Issue 更新、必要なら grill）→ ブランチ作成 → 作業 → PR → 人間レビュー・マージ → 繰り返し
+```
 
 ## Forbidden
 

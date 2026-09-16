@@ -16,7 +16,7 @@
 
 IDE は任意です。Cursor、Visual Studio 2022（.NET デスクトップ開発）、または C# 拡張入り VS Code/Cursor のいずれでも構いません。
 
-Linux / WSL / Ubuntu だけでは **ソリューション全体はビルドできません**（WPF）。ライブラリ本体（Core / Anthropic / OpenAI）の作業なら Linux でも進められますが、手順は [`setup-agent.md`](setup-agent.md) を見てください。
+Linux / WSL / Ubuntu だけでは **ソリューション全体はビルドできません**（WPF）。ライブラリ本体（Core）の作業なら Linux でも進められますが、手順は [`setup-agent.md`](setup-agent.md) を見てください。
 
 ## 1. SDK を入れる
 
