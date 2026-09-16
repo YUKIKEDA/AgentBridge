@@ -9,6 +9,7 @@ alwaysApply: true
 
 - Canonical design: `docs/design.md`
 - Canonical roadmap: `docs/roadmap.md`
+- ADRs: `docs/adr/`
 - `.dev/` is temporary (reviews, scratch). Do not leave permanent decisions only there.
 
 ## Changing the design

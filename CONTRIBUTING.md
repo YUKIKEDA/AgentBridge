@@ -25,16 +25,15 @@
 
 ## マイルストーン
 
-実装は `docs/roadmap.md` の **M0〜M5** に従います。
+実装は `docs/roadmap.md` の **M0〜M4** に従います。契約は [`docs/design.md`](docs/design.md)。選定経緯は [`docs/adr/0001-agent-framework-host.md`](docs/adr/0001-agent-framework-host.md)。
 
 | ID | 概要 |
 | ---- | ---- |
-| M0 | リポジトリ基盤（slnx / 8 プロジェクト / 規約 / analyzers / build.ps1） |
-| M1 | Core データモデル + TurnLease |
-| M2 | ConversationLoop + FakeProvider + AssistantTurnBuilder |
-| M3 | ToolDispatcher |
-| M4 | Anthropic → OpenAI（同一 M 内で直列） |
-| M5 | WPF（Marshaller 優先） |
+| M0 | リポジトリ基盤（slnx / 規約 / analyzers / build.ps1） |
+| M1 | 旧 Core データモデル + TurnLease（Done。M2 で削除） |
+| M2 | Agent Framework ホスト（Core）。旧型と Anthropic / OpenAI プロジェクト削除 |
+| M3 | WPF マーシャラと実行状態 |
+| M4 | samples（最小チャット） |
 
 ## Issue と PR
 
@@ -46,7 +45,7 @@
   - **spike** — 時間boxed の調査（本番コード必須にしない）
 - ブランチ名: `type/<issue号>-<slug>`（例: `feat/12-assistant-turn-builder`）
 - コミット / PR タイトル: [Conventional Commits](.cursor/rules/conventional-commits.mdc)（type/scope は英語、subject は日本語可）
-- 推奨 scope: `core`, `loop`, `dispatcher`, `anthropic`, `openai`, `wpf`, `build`, `ci`, `docs`, `test`
+- 推奨 scope: `core`, `wpf`, `samples`, `build`, `ci`, `docs`, `test`
 - PR 本文は [`.github/pull_request_template.md`](.github/pull_request_template.md) の見出しを厳密に使用する
 - **Issue の関連付け（必須）:** PR 本文の `## Related` に、GitHub が認識する Closing キーワードを書く。
   - 推奨: **単独行**で `Closes #12`（または `Fixes #12` / `Resolves #12`）
@@ -55,7 +54,7 @@
 
 ### ラベル（推奨）
 
-- `M0` … `M5`
+- `M0` … `M4`
 - `type:feat` / `type:bug` / `type:task` / `type:spike`
 
 ## 設計変更プロセス
@@ -68,11 +67,12 @@
 
 ```text
 AgentBridge.slnx
-src/AgentBridge.{Core,Anthropic,OpenAI,Wpf}/
-tests/AgentBridge.{Core,Anthropic,OpenAI,Wpf}.Tests/   # 実装と 1:1
-samples/                                                 # M5 以降
+src/AgentBridge.{Core,Wpf}/          # M2 まで Anthropic / OpenAI が残存しうる
+tests/AgentBridge.{Core,Wpf}.Tests/  # 実装と 1:1
+samples/                             # M4
 docs/design.md
 docs/roadmap.md
+docs/adr/
 ```
 
 - ソリューション形式: **`.slnx` のみ**（`.sln` は使わない・置かない）

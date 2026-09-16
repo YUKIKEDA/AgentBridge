@@ -15,8 +15,9 @@ Follow `.cursor/rules/workflow.mdc`. Do not implement without Issue + branch + e
 
 - Solution file: **`AgentBridge.slnx` only** (do not create or keep `.sln`)
 - Implementation under `src/AgentBridge.*`
-- Tests under `tests/AgentBridge.*.Tests` mirroring src 1:1 (Core, Anthropic, OpenAI, Wpf)
-- Samples under `samples/` (optional until M5)
+- Tests under `tests/AgentBridge.*.Tests` mirroring src 1:1（Core / Wpf。M2 完了までは Anthropic / OpenAI が残存しうる）
+- Samples under `samples/`（M4）
+- Lasting decisions: `docs/design.md`, `docs/roadmap.md`, `docs/adr/`
 - Do not put lasting decisions only in `.dev/` (temporary scratch / review drafts)
 
 ## Targets
