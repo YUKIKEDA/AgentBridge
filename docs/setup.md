@@ -57,7 +57,11 @@ cd AgentBridge
 
 成功すると `build.ps1 completed successfully.` と出ます。これがマージ前のローカルゲートです。GitHub Actions はアカウント制限で動かないことがあるため、Actions の緑を Done 条件にしないでください。
 
-## 4. 作業の進め方
+## 4. サンプルを動かす
+
+最小 WPF チャットの手順は [`samples.md`](samples.md) です。`OPENAI_API_KEY` が必要です。
+
+## 5. 作業の進め方
 
 実装に入る前に [`CONTRIBUTING.md`](../CONTRIBUTING.md) の順を守ります。
 

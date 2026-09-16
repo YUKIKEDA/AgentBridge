@@ -9,6 +9,7 @@
 - エージェント向けセットアップ: [`docs/setup-agent.md`](docs/setup-agent.md)
 - 設計: [`docs/design.md`](docs/design.md)
 - ロードマップ: [`docs/roadmap.md`](docs/roadmap.md)
+- サンプル: [`docs/samples.md`](docs/samples.md)
 - 開発規約: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## Verify locally
