@@ -9,14 +9,17 @@
 コードや規約に手を入れる作業は、**必ず次の順**で進める。Issue なし・ブランチなし・PR なしでの実装着手は禁止。
 
 ```text
-1. Issue 作成（roadmap の想定タイトルを起点にしてよい）
-2. 必要ならタスク分解 → 同じ Issue を更新、または子 Issue を切る
-3. ブランチ作成: type/<issue号>-<slug>（Issue 番号必須）
-4. 作業（Windows では ./build.ps1。Linux エージェントは docs/setup-agent.md）
-5. PR 作成（テンプレ厳守、Related に Closes #N を書く — URL のみは不可）
-6. 人間レビュー → マージ
-7. 次の Issue へ（繰り返し）
+（必要なら grill）→ Issue 作成 →（必要なら分解して Issue 更新、必要なら grill）→ ブランチ作成 → 作業 → PR → 人間レビュー・マージ → 繰り返し
 ```
+
+1. **必要なら grill**（Issue 作成の前）: 契約・技術選定・公開 API・状態機械など、判断が枝分かれするとき。スキルは [`.cursor/skills/grill-me/SKILL.md`](.cursor/skills/grill-me/SKILL.md)。誤字、本 ADR / 設計に従った機械的な削除、単純なテスト追加では不要。
+2. **Issue 作成**（roadmap の想定タイトルを起点にしてよい）
+3. **必要なら Issue 作成後にも grill**し、本文の更新やタスク分解（同じ Issue の更新、または子 Issue）に反映する
+4. **ブランチ作成:** `type/<issue号>-<slug>`（Issue 番号必須）
+5. **作業**（Windows では `./build.ps1`。Linux エージェントは `docs/setup-agent.md`）
+6. **PR 作成**（テンプレ厳守、Related に `Closes #N` を書く — URL のみは不可）
+7. **人間レビュー → マージ**
+8. 次の Issue へ（繰り返し）
 
 - **エージェントは Issue / ブランチ / PR を飛ばして作業ディレクトリに実装を書き始めてはならない。**
 - **PR を Issue に GitHub 上で Linked せずに出してはならない**（`Closes #N` / `Fixes #N` / `Resolves #N` を本文に含める。URL だけは不十分）。
@@ -30,8 +33,8 @@
 | ID | 概要 |
 | ---- | ---- |
 | M0 | リポジトリ基盤（slnx / 規約 / analyzers / build.ps1） |
-| M1 | 旧 Core データモデル + TurnLease（Done。M2 で削除） |
-| M2 | Agent Framework ホスト（Core）。旧型と Anthropic / OpenAI プロジェクト削除 |
+| M1 | 旧 Core データモデル + TurnLease（削除済み） |
+| M2 | Agent Framework ホスト（Core） |
 | M3 | WPF マーシャラと実行状態 |
 | M4 | samples（最小チャット） |
 
@@ -67,7 +70,7 @@
 
 ```text
 AgentBridge.slnx
-src/AgentBridge.{Core,Wpf}/          # M2 まで Anthropic / OpenAI が残存しうる
+src/AgentBridge.{Core,Wpf}/
 tests/AgentBridge.{Core,Wpf}.Tests/  # 実装と 1:1
 samples/                             # M4
 docs/design.md
@@ -83,7 +86,7 @@ docs/adr/
 
 - `Nullable` enable、`TreatWarningsAsErrors`
 - **StyleCop.Analyzers** + 組み込みコード分析
-- **インターフェース名:** 必ず `I` プレフィックスを付ける（例: `IConversationTurnLease`）。`SA1302` は無効化しない
+- **インターフェース名:** 必ず `I` プレフィックスを付ける（例: `IUiThreadMarshaller`）。`SA1302` は無効化しない
 - フォーマット: **`dotnet format`**（`.editorconfig` 準拠）
 - XML ドキュメントコメント厳格適用は **public API** 向け。テスト・internal で止めない
 - 設定は `Directory.Build.props` と `.editorconfig` に集約し、各 csproj に散らさない
@@ -104,7 +107,7 @@ GitHub Actions の workflow はリポジトリに置くが、**利用制限に�
 
 想定内容: `dotnet restore` → `dotnet format --verify-no-changes` → `dotnet build` → `dotnet test`（失敗時は非ゼロ終了）。対象は **`AgentBridge.slnx`**。
 
-WPF（`net10.0-windows`）を含むため、このスクリプトは **Windows 専用** です。Linux のエージェントは `./build.ps1` を実行せず、[`docs/setup-agent.md`](docs/setup-agent.md) の `./scripts/verify-linux.sh`（Core / Anthropic / OpenAI のみ）を使います。Linux 検証が通っても、マージ前の正本ゲートは Windows の `./build.ps1` のままです。
+WPF（`net10.0-windows`）を含むため、このスクリプトは **Windows 専用** です。Linux のエージェントは `./build.ps1` を実行せず、[`docs/setup-agent.md`](docs/setup-agent.md) の `./scripts/verify-linux.sh`（Core のみ）を使います。Linux 検証が通っても、マージ前の正本ゲートは Windows の `./build.ps1` のままです。
 
 PR の Verification には、上記を実行した旨を書く。
 

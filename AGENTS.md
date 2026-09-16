@@ -11,7 +11,7 @@ If `dotnet --list-sdks` does not show **10.x**, or you are on Linux, follow [`do
 | Windows | `./build.ps1` (full solution, including WPF) |
 | Linux / Ubuntu 24.04 | `./scripts/bootstrap-ubuntu.sh` then `./scripts/verify-linux.sh` |
 
-On Linux, **do not run `./build.ps1`**. WPF (`net10.0-windows`) cannot build there; that error is expected. Continue with Core（M2 以降。移行中は Anthropic / OpenAI プロジェクトが残っている場合がある）。
+On Linux, **do not run `./build.ps1`**. WPF (`net10.0-windows`) cannot build there; that error is expected. Continue with Core.
 
 Human setup: [`docs/setup.md`](docs/setup.md).
 
@@ -31,7 +31,7 @@ Human setup: [`docs/setup.md`](docs/setup.md).
 
 ## Always-apply rules
 
-- [`.cursor/rules/workflow.mdc`](.cursor/rules/workflow.mdc) — **Issue → branch → work → PR → human merge**
+- [`.cursor/rules/workflow.mdc`](.cursor/rules/workflow.mdc) — **grill if needed → Issue → branch → work → PR → human merge**
 - [`.cursor/rules/conventional-commits.mdc`](.cursor/rules/conventional-commits.mdc)
 - [`.cursor/rules/pull-requests.mdc`](.cursor/rules/pull-requests.mdc)
 - [`.cursor/rules/engineering.mdc`](.cursor/rules/engineering.mdc)
@@ -40,7 +40,7 @@ Human setup: [`docs/setup.md`](docs/setup.md).
 
 ## Working agreements (summary)
 
-- **Do not start coding a milestone without a GitHub Issue and branch.** Roadmap text is not a start signal.
+- **Do not start coding a milestone without a GitHub Issue and branch.** Roadmap text is not a start signal. Grill (`.cursor/skills/grill-me`) before or after the first Issue when design/tech choices still branch; skip when the ADR/design already decides the work.
 - Follow `docs/design.md` contracts; design-changing work needs a design PR first (docs-only clarifications may ship with code).
 - Implement in roadmap order; **1 issue ≈ 1 PR** (M0 may batch only with an Issue that says so).
 - Branch: `type/<issue-number>-<slug>`.
@@ -51,4 +51,4 @@ Human setup: [`docs/setup.md`](docs/setup.md).
 
 ## Current backlog pointer
 
-See [`docs/roadmap.md`](docs/roadmap.md). Next coding work requires creating the corresponding GitHub Issue first, then a branch, then a PR for human review.
+See [`docs/roadmap.md`](docs/roadmap.md). Next coding work: grill if the decision tree is still open, then create the corresponding GitHub Issue, then a branch, then a PR for human review.

@@ -21,7 +21,7 @@ Windows（ソリューション全体、WPF 含む）:
 ./build.ps1
 ```
 
-Linux（Core / Anthropic / OpenAI のみ。WPF はビルドできない）:
+Linux（Core のみ。WPF はビルドできない）:
 
 ```bash
 ./scripts/bootstrap-ubuntu.sh
@@ -30,7 +30,7 @@ Linux（Core / Anthropic / OpenAI のみ。WPF はビルドできない）:
 
 ## Process
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md): **Issue → branch → work → PR → human merge**. Do not start milestone work from the roadmap text alone.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md): **grill if needed → Issue → branch → work → PR → human merge**. Do not start milestone work from the roadmap text alone.
 
 ## Layout
 

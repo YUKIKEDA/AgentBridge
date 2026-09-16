@@ -11,7 +11,7 @@ Human-oriented guide: [`setup.md`](setup.md). Process: [`AGENTS.md`](../AGENTS.m
 3. **Do not unset** `HTTP_PROXY` / `HTTPS_PROXY` / `http_proxy` / `https_proxy`. Network already works via proxy. Leave apt proxy config as-is.
 4. Use non-interactive apt: `DEBIAN_FRONTEND=noninteractive` and `apt-get -y`.
 5. After bootstrap, **continue the original task**. Bootstrap is a prerequisite, not a deliverable by itself.
-6. WPF work (`src/AgentBridge.Wpf`, `tests/AgentBridge.Wpf.Tests`) requires Windows. On Linux, skip it and verify Core / Anthropic / OpenAI only.
+6. WPF work (`src/AgentBridge.Wpf`, `tests/AgentBridge.Wpf.Tests`) requires Windows. On Linux, skip it and verify Core only.
 7. Do not create `.sln` files. The solution is `AgentBridge.slnx` only.
 
 ## 0. Decide the path
@@ -71,24 +71,18 @@ export DOTNET_NOLOGO=1
 
 projects="
 src/AgentBridge.Core/AgentBridge.Core.csproj
-src/AgentBridge.Anthropic/AgentBridge.Anthropic.csproj
-src/AgentBridge.OpenAI/AgentBridge.OpenAI.csproj
 tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj
-tests/AgentBridge.Anthropic.Tests/AgentBridge.Anthropic.Tests.csproj
-tests/AgentBridge.OpenAI.Tests/AgentBridge.OpenAI.Tests.csproj
 "
 
 for p in $projects; do dotnet restore "$p"; done
 for p in $projects; do dotnet format "$p" --verify-no-changes; done
 for p in $projects; do dotnet build "$p" --no-restore -c Release; done
-for p in tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj \
-         tests/AgentBridge.Anthropic.Tests/AgentBridge.Anthropic.Tests.csproj \
-         tests/AgentBridge.OpenAI.Tests/AgentBridge.OpenAI.Tests.csproj; do
+for p in tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj; do
   dotnet test "$p" --no-build -c Release
 done
 ```
 
-If this succeeds, the Linux environment is good enough to implement Core / Anthropic / OpenAI (and docs). Full `./build.ps1` remains the Windows merge gate; mention that in the PR Verification section.
+If this succeeds, the Linux environment is good enough to implement Core (and docs). Full `./build.ps1` remains the Windows merge gate; mention that in the PR Verification section.
 
 ## 2. What “failure” means
 
@@ -102,6 +96,6 @@ If this succeeds, the Linux environment is good enough to implement Core / Anthr
 
 ## 3. After the environment is ready
 
-Follow [`AGENTS.md`](../AGENTS.md): Issue → branch `type/<issue-number>-<slug>` → implement → verify → PR with `Closes #N`.
+Follow [`AGENTS.md`](../AGENTS.md): grill if needed → Issue → branch `type/<issue-number>-<slug>` → implement → verify → PR with `Closes #N`.
 
 Do not start milestone implementation without an Issue number and branch.

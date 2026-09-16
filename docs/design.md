@@ -27,9 +27,9 @@
 - 製品 Python API を唯一のツールとして渡すこと
 - ソルバー完了までツールがブロックすること
 
-### 移行（M1 ソース）
+### 移行
 
-M1 で入った独自データモデルは本契約の公開 API ではない。M2 実装で削除する。それまで旧型へ機能を足さない。
+M1 の独自データモデルと `AgentBridge.Anthropic` / `AgentBridge.OpenAI` は削除済み。Core は AF ホスト実装まで `AssemblyMarker` のみの過渡期とする。
 
 ---
 
@@ -41,7 +41,7 @@ AgentBridge.Wpf                  DispatcherMarshaller、実行状態（busy / �
 samples/                         最小チャット（ライブラリ本体には含めない）
 ```
 
-MVP では `AgentBridge.Anthropic` / `AgentBridge.OpenAI` は置かない（既存プロジェクトは M2 で削除）。プロバイダはアプリが MEAI の `IChatClient` を渡す。Claude は後続で Anthropic SDK を `IChatClient` に適応する。
+MVP では `AgentBridge.Anthropic` / `AgentBridge.OpenAI` は置かない。プロバイダはアプリが MEAI の `IChatClient` を渡す。Claude は後続で Anthropic SDK を `IChatClient` に適応する。
 
 > アプリ固有のツール（境界条件、ジョブ投入、コンター等）は AgentBridge に含めず、利用側プロジェクトに置く。
 

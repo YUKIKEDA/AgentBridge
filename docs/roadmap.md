@@ -9,10 +9,10 @@
 作業順序（必須）:
 
 ```text
-Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作成 → 作業 → PR → 人間レビュー・マージ → 繰り返し
+（必要なら grill）→ Issue 作成 →（必要なら分解して Issue 更新、必要なら grill）→ ブランチ作成 → 作業 → PR → 人間レビュー・マージ → 繰り返し
 ```
 
-詳細は [`CONTRIBUTING.md`](../CONTRIBUTING.md)。ロードマップの箇条書きはバックログ候補であり、**Issue 化されるまで着手しない**。
+契約・技術選定など判断が分かれるときは、最初の Issue の前または後で [grill-me](../.cursor/skills/grill-me/SKILL.md) を入れる。詳細は [`CONTRIBUTING.md`](../CONTRIBUTING.md)。ロードマップの箇条書きはバックログ候補であり、**Issue 化されるまで着手しない**。
 
 - 1 Issue ≈ 1 PR（M0 のみまとめ可。その場合も Issue を先に切る）
 - Issue タイプ: `feat` / `bug` / `task` / `spike`
@@ -27,21 +27,18 @@ Issue 作成 →（必要なら分解して Issue 更新）→ ブランチ作�
 
 **Done:** 空の 8 プロジェクトがビルドでき、`build.ps1` がローカルで通る。規約・テンプレ・analyzers。ソリューションは **`.slnx` のみ**。
 
-## M1 — Core データモデル + TurnLease（旧契約。廃棄予定）
+## M1 — Core データモデル + TurnLease（旧契約。削除済み）
 
-**Status:** Done（独自 `ChatMessage` / `ToolResult` / `ConversationState`）
-
-本マイルストーンの成果は [ADR 0001](adr/0001-agent-framework-host.md) により **公開契約ではない**。M2 で削除する。旧型への機能追加はしない。
+**Status:** 独自型はリポジトリから削除済み。履歴として残すのみ。
 
 ## M2 — Agent Framework ホスト（Core）
 
-**Done:** Core が `IChatClient` から直列ツール実行の `ChatClientAgent` を組み立て、UI 包み済み `AIFunction` を渡せる。M1 独自型と `AgentBridge.Anthropic` / `AgentBridge.OpenAI` プロジェクトを削除する。偽 `IChatClient` でストリーム・ツール直列・キャンセルのテストが緑。
+**Done:** Core が `IChatClient` から直列ツール実行の `ChatClientAgent` を組み立て、UI 包み済み `AIFunction` を渡せる。偽 `IChatClient` でストリーム・ツール直列・キャンセルのテストが緑。
 
 **Issues（予定）:**
 
 - `feat(core):` MEAI / AF 依存とホスト組み立て（直列 invocation、反復上限）
 - `feat(core):` `IUiThreadMarshaller` と `AIFunction` の UI 包み
-- `chore:` M1 独自型の削除、Anthropic / OpenAI プロジェクト削除、`verify-linux.sh` の追従
 - `test(core):` 偽クライアントでツール直列と CT
 
 ## M3 — WPF マーシャラと実行状態
