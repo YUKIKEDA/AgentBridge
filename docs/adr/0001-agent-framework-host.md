@@ -59,7 +59,7 @@
 
 ## 4. 当初メモの誤り・過不足（訂正）
 
-当初メモ（`.dev/agentbridge-tech-selection.md`）および比較表について、一次情報で直した点。
+検討草稿の比較表について、一次情報で直した点。
 
 1. **「Copilot / AF は会話を保存できない」**  
    誤り。両方とも永続化を持つ。論点は保存フォーマットの所有だった。その後の議論で、アプリが履歴正本を持つ用途自体が無いと判明した。
@@ -114,7 +114,7 @@
 - Core は `Microsoft.Agents.AI` と `Microsoft.Extensions.AI` に依存する。
 - `AgentBridge.Anthropic` / `AgentBridge.OpenAI` は MVP で不要。プロバイダは MEAI 公式クライアント。Claude は後続のアダプタ Issue。
 - SK → AF のようなエコシステム入れ替えリスクは受け入れる。
-- 本 ADR が技術選定の正本である。`.dev/agentbridge-tech-selection.md` は草稿であり、決定をそこに置かない。
+- 本 ADR が技術選定の正本である。決定を `.dev/` に置かない。
 
 ## 8. 未検証のまま残したもの
 
