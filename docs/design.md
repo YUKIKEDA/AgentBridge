@@ -29,7 +29,7 @@
 
 ### 移行
 
-M1 の独自データモデルと `AgentBridge.Anthropic` / `AgentBridge.OpenAI` は削除済み。Core は AF ホスト実装まで `AssemblyMarker` のみの過渡期とする。
+M1 の独自データモデルと `AgentBridge.Anthropic` / `AgentBridge.OpenAI` は削除済み。Core のホスト定型は `AgentBridgeHost` / `UiThreadFunctions`。
 
 ---
 
@@ -83,13 +83,13 @@ public interface IUiThreadMarshaller
 
 ### 3.3 `AIFunction` の UI 包み
 
-`AIFunctionFactory.Create` で作った関数を、`IUiThreadMarshaller` 付きで包み、`Invoke` が UI スレッド上で走ることを保証する。包んでいない関数は任意スレッドで走ってよい（ジョブ状態照会など）。
+`UiThreadFunctions.Bind` が `AIFunctionFactory.Create` で作った関数を `IUiThreadMarshaller` 付きで包み、`Invoke` が UI スレッド上で走ることを保証する。包んでいない関数は任意スレッドで走ってよい（ジョブ状態照会など）。
 
 同一応答内の複数ツールは **直列**（`AllowConcurrentInvocation = false`）。CAE のドキュメント操作を並列にしない。オプトイン並列は将来の拡張であり、MVP の公開契約にしない。
 
 ### 3.4 AF ホストの定型（Core）
 
-`IChatClient` とツール一覧から `ChatClientAgent`（`AIAgent`）を返す。
+`AgentBridgeHost.Create(IChatClient, tools, marshaller?, options?)` が `ChatClientAgent`（`AIAgent`）を返す。`options.MaximumIterationsPerRequest` の既定は 10。
 
 必ず行うこと:
 

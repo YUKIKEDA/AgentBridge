@@ -35,11 +35,9 @@
 
 **Done:** Core が `IChatClient` から直列ツール実行の `ChatClientAgent` を組み立て、UI 包み済み `AIFunction` を渡せる。偽 `IChatClient` でストリーム・ツール直列・キャンセルのテストが緑。
 
-**Issues（予定）:**
+**Issues:**
 
-- `feat(core):` MEAI / AF 依存とホスト組み立て（直列 invocation、反復上限）
-- `feat(core):` `IUiThreadMarshaller` と `AIFunction` の UI 包み
-- `test(core):` 偽クライアントでツール直列と CT
+- https://github.com/YUKIKEDA/AgentBridge/issues/17 — ホスト組み立て、UI 包み、偽クライアント試験（本マイルストーンを 1 Issue にまとめる）
 
 ## M3 — WPF マーシャラと実行状態
 
