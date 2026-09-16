@@ -139,7 +139,7 @@ Core は永続化しない。起動中は AF の `AgentSession`（メモリ）�
 ## 4. WPF
 
 - `DispatcherMarshaller` が `IUiThreadMarshaller` を実装する（§3.2）
-- 実行状態ヘルパー: 開始、`IsBusy`、キャンセル、ストリーム列挙の購読口。チャットの見た目（ListBox、Markdown 描画等）は samples または製品側
+- `AgentRunController` が開始、`IsBusy`、キャンセル、`RunStreamingAsync` の列挙口を提供する。同一 `AgentSession` の同時実行は拒否する。チャットの見た目（ListBox、Markdown 描画等）は samples または製品側
 
 ---
 
