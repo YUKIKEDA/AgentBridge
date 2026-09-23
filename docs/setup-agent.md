@@ -11,7 +11,7 @@ Human-oriented guide: [`setup.md`](setup.md). Process: [`AGENTS.md`](../AGENTS.m
 3. **Do not unset** `HTTP_PROXY` / `HTTPS_PROXY` / `http_proxy` / `https_proxy`. Network already works via proxy. Leave apt proxy config as-is.
 4. Use non-interactive apt: `DEBIAN_FRONTEND=noninteractive` and `apt-get -y`.
 5. After bootstrap, **continue the original task**. Bootstrap is a prerequisite, not a deliverable by itself.
-6. WPF work (`src/AgentBridge.Wpf`, `tests/AgentBridge.Wpf.Tests`) requires Windows. On Linux, skip it and verify Core only.
+6. WPF work (`src/AgentBridge.Wpf`, `tests/AgentBridge.Wpf.Tests`) requires Windows. On Linux, skip it and verify the non-WPF projects (Core, GitHubCopilot).
 7. Do not create `.sln` files. The solution is `AgentBridge.slnx` only.
 
 ## 0. Decide the path
@@ -72,12 +72,14 @@ export DOTNET_NOLOGO=1
 projects="
 src/AgentBridge.Core/AgentBridge.Core.csproj
 tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj
+src/AgentBridge.GitHubCopilot/AgentBridge.GitHubCopilot.csproj
+tests/AgentBridge.GitHubCopilot.Tests/AgentBridge.GitHubCopilot.Tests.csproj
 "
 
 for p in $projects; do dotnet restore "$p"; done
 for p in $projects; do dotnet format "$p" --verify-no-changes; done
 for p in $projects; do dotnet build "$p" --no-restore -c Release; done
-for p in tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj; do
+for p in tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj tests/AgentBridge.GitHubCopilot.Tests/AgentBridge.GitHubCopilot.Tests.csproj; do
   dotnet test "$p" --no-build -c Release
 done
 ```

@@ -1,10 +1,12 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/AgentBridge.Core/AgentBridge.Core.csproj" />
+    <Project Path="src/AgentBridge.GitHubCopilot/AgentBridge.GitHubCopilot.csproj" />
     <Project Path="src/AgentBridge.Wpf/AgentBridge.Wpf.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj" />
+    <Project Path="tests/AgentBridge.GitHubCopilot.Tests/AgentBridge.GitHubCopilot.Tests.csproj" />
     <Project Path="tests/AgentBridge.Wpf.Tests/AgentBridge.Wpf.Tests.csproj" />
   </Folder>
 </Solution>

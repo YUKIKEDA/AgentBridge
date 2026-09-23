@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Linux 用の非 WPF 検証
-# 正本ゲートは Windows の ./build.ps1（AgentBridge.slnx 全体）。こちらは Core のみ
+# 正本ゲートは Windows の ./build.ps1（AgentBridge.slnx 全体）。こちらは WPF 以外
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -17,10 +17,13 @@ fi
 projects=(
   src/AgentBridge.Core/AgentBridge.Core.csproj
   tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj
+  src/AgentBridge.GitHubCopilot/AgentBridge.GitHubCopilot.csproj
+  tests/AgentBridge.GitHubCopilot.Tests/AgentBridge.GitHubCopilot.Tests.csproj
 )
 
 tests=(
   tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj
+  tests/AgentBridge.GitHubCopilot.Tests/AgentBridge.GitHubCopilot.Tests.csproj
 )
 
 echo "verify-linux: restore"
