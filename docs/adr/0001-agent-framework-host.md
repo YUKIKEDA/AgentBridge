@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-16
 - Issue: #13
+- §6 の Copilot SDK（A）の扱いは [ADR 0002](0002-github-copilot-provider.md) が部分的に置き換える（本線にはしないが、追加の経路として認める）
 
 契約の正本は [`docs/design.md`](../design.md)。本 ADR は技術選定の比較・誤りの訂正・議論の経緯を残す。
 
