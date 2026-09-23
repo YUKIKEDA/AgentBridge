@@ -1,6 +1,6 @@
 # AgentBridge 設計仕様書
 
-選定の経緯は [ADR 0001](adr/0001-agent-framework-host.md)。本ファイルが契約の正本。
+選定の経緯は [ADR 0001](adr/0001-agent-framework-host.md) と [ADR 0002](adr/0002-github-copilot-provider.md)。本ファイルが契約の正本。
 
 ## 1. 概要とスコープ
 
@@ -14,12 +14,13 @@
 - **UI スレッド:** `IUiThreadMarshaller` と、`AIFunction` を UI スレッド上で実行する包み
 - **WPF:** Dispatcher 実装と、1 セッション 1 実行の busy / キャンセル
 - **ストリーミングの受け渡し:** `RunStreamingAsync` の `AgentResponseUpdate` をアプリへそのまま出す
+- **GitHub Copilot（任意）:** Copilot SDK を `AIAgent` として得る追加の経路（§3.9）
 
 ### スコープ外
 
 - 自前の `ConversationLoop` / `ILlmProvider` / `ToolDispatcher` / `IToolHandler` / `ToolRegistry`
 - 独自 `ChatMessage` / `ToolResult` / `ProviderEvent` を公開契約にすること
-- Copilot SDK をランタイムにすること
+- Copilot SDK を本線（既定のランタイム）にすること。追加の選択肢としては §3.9 で認める
 - ライブラリ内のチャット見た目（samples で示す）
 - マルチエージェント協調、長期記憶、プランニング基盤
 - ローカル LLM の推論ホスティング
@@ -38,6 +39,7 @@ M1 の独自データモデルと `AgentBridge.Anthropic` / `AgentBridge.OpenAI`
 ```
 AgentBridge.Core                 AF ホスト定型、IUiThreadMarshaller、AIFunction の UI 包み
 AgentBridge.Wpf                  DispatcherMarshaller、実行状態（busy / キャンセル）
+AgentBridge.GitHubCopilot        Copilot SDK を AIAgent として組み立てる任意の経路（§3.9）
 samples/                         最小チャット（ライブラリ本体には含めない）
 ```
 
@@ -128,11 +130,33 @@ AF 既定では、キャンセル／失敗したランの部分状態をセッ�
 
 - **MVP:** OpenAI 互換（Azure OpenAI を含む）の公式 MEAI `IChatClient`
 - **Claude:** 第一プロバイダにしない。必要になったら Anthropic 公式 SDK を `IChatClient` で包む Issue を切る
-- Copilot SDK は採用しない
+- **GitHub Copilot:** 本線にはしない。アプリが選べる追加の経路として `AgentBridge.GitHubCopilot` を置く（§3.9、[ADR 0002](adr/0002-github-copilot-provider.md)）
 
 ### 3.8 会話の永続化
 
 Core は永続化しない。起動中は AF の `AgentSession`（メモリ）で足りる。プロジェクトファイルへ会話を残す要件は今はない。
+
+### 3.9 GitHub Copilot 経路（`AgentBridge.GitHubCopilot`、任意）
+
+アプリが GitHub Copilot の契約でモデルを使いたいときの追加の経路。本線（§3.4）は変えない。
+
+- 依存は `Microsoft.Agents.AI.GitHub.Copilot`（AF 公式、Core と同じ AF 版）。Core はこのパッケージも Copilot SDK も参照しない
+- 返す型は `AIAgent`（`GitHubCopilotAgent`）。Wpf の `AgentRunController` と `RunStreamingAsync` / CT の扱いは §3.5 と同じ
+- ツールは本線と同じ `AIFunction`。`marshaller` 指定時は `UiThreadFunctions.Bind` で包んでから渡す
+- Copilot CLI は `GitHub.Copilot.SDK` がビルド時に取得して出力へ同梱する。アプリの利用者が別途入れる必要はない。閉域網ではアプリが取得元を差し替える
+- 認証はアプリが選ぶ（ログイン済みユーザー、または GitHub トークン）。AgentBridge は資格情報を保存しない
+
+必ず行うこと（既定）:
+
+1. CLI 組み込みのファイル／シェル／MCP ツールを出さない（`CopilotClientMode.Empty` 相当）。モデルに見えるのはアプリが渡したツールだけ
+2. ツール実行の許可は、アプリが渡したツール名だけを許可し、それ以外は拒否する
+3. セッションの保存先（`BaseDirectory`）はアプリが指定する
+
+保証しないこと（本線との差。[ADR 0002](adr/0002-github-copilot-provider.md) §4）:
+
+- 反復上限（`MaximumIterationsPerRequest`）と、非 UI ツールの直列実行。ループは Copilot CLI が持つ
+- キャンセル後に次の送信が通ること。失敗したら新しいセッションへ切り替える手順を samples で示す
+- 会話保存の形式。CLI の内部形式であり公開契約にしない
 
 ---
 
@@ -145,7 +169,7 @@ Core は永続化しない。起動中は AF の `AgentSession`（メモリ）�
 
 ## 5. バージョニング
 
-- 残すパッケージ（Core / Wpf）はロックステップ版付け
+- 残すパッケージ（Core / Wpf / GitHubCopilot）はロックステップ版付け
 - M1 独自型の削除は本設計に従う破壊的整理であり、初の実装系メジャーとして扱ってよい
 - 公開拡張ポイントへのメンバー追加は DIM を優先
 
@@ -154,6 +178,7 @@ Core は永続化しない。起動中は AF の `AgentSession`（メモリ）�
 | 項目 | 方針 |
 | :-- | :-- |
 | Claude `IChatClient` | 後続 Issue |
+| GitHub Copilot 経路 | §3.9。任意パッケージ |
 | Steer（ツール完了待ちのあと次指示） | アプリまたは薄いヘルパー |
 | 会話の DB / ファイル保存 | アプリ。`ChatHistoryProvider` を使うならアプリが実装 |
 | ツール承認 UI | 必須にしない |

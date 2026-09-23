@@ -59,11 +59,14 @@
 ## 後続（このロードマップの M 番号は付けない）
 
 - Claude: Anthropic SDK の `IChatClient` アダプタ
+- GitHub Copilot: 追加の経路 `AgentBridge.GitHubCopilot`（設計 §3.9、[ADR 0002](adr/0002-github-copilot-provider.md)）
+  - https://github.com/YUKIKEDA/AgentBridge/issues/26 — 設計（ADR 0002）
+  - https://github.com/YUKIKEDA/AgentBridge/issues/27 — パッケージ実装
 - Steer ヘルパー、会話永続、承認 UI、`run_python`（設計 §5.1）
 
 ## スコープ外（やらない）
 
-- Copilot SDK をランタイムにすること
+- Copilot SDK を本線（既定のランタイム）にすること。追加の経路は後続を参照
 - 自前 `ConversationLoop` / `ILlmProvider` / `ToolDispatcher`
 - ライブラリ本体の本格チャット UI
 - 必須の Undo、コンテキスト要約、動的ツールロード
