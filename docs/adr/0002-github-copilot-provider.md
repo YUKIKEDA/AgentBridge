@@ -56,4 +56,9 @@ ADR 0001 は Microsoft Agent Framework（AF）がツール呼び出しループ�
 
 - `docs/design.md` の §1 / §2 / §3.7 を更新し、§3.9 に Copilot 経路の契約を置く
 - 実装は #27
-- 未検証: CLI 同梱時のライセンス条件と配布サイズ、閉域網での取得手順。#27 の PR で確かめる
+- #27 で確かめたこと（SDK 1.0.5 / CLI 1.0.67）
+  - ライセンス: CLI 同梱の `LICENSE.md`（GitHub Copilot CLI License）は、改変なしで、アプリの一部として再配布することを認める。単体での配布は不可。配布物にはライセンスの写しを含める
+  - 配布サイズ: linux-x64 の CLI 実行ファイルは約 147 MB（取得する tgz は約 122 MB）。RID ごとに 1 つ
+  - 取得: `AgentBridge.GitHubCopilot` を参照するだけでビルド時に取得され、参照元の出力へ流れる。閉域網では `CopilotNpmRegistryUrl` または `CopilotCliBinaryPath` を使う。CLI を起動しないテストでは `CopilotSkipCliDownload=true`
+  - `GitHubCopilotAgent` は CT の発火で Copilot 側のセッションを破棄し、ツールのハンドラも外す。実行中のツールは協調キャンセルに留まる
+  - 許可の判定の戻り値 `PermissionDecision` は SDK 側で評価段階の API（GHCP001）。SDK 更新時に見直す

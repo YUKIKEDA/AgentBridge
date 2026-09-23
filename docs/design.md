@@ -146,6 +146,13 @@ Core は永続化しない。起動中は AF の `AgentSession`（メモリ）�
 - Copilot CLI は `GitHub.Copilot.SDK` がビルド時に取得して出力へ同梱する。アプリの利用者が別途入れる必要はない。閉域網ではアプリが取得元を差し替える
 - 認証はアプリが選ぶ（ログイン済みユーザー、または GitHub トークン）。AgentBridge は資格情報を保存しない
 
+公開 API:
+
+- `GitHubCopilotHost.CreateClientOptions(baseDirectory)` が `CopilotClientMode.Empty` と保存先を設定した `CopilotClientOptions` を返す。アプリは認証などを足して `CopilotClient` を作る
+- `GitHubCopilotHost.Create(client, tools, marshaller?, options?)` が `GitHubCopilotAgent` を返す。`options` は名前、説明、指示（Copilot 既定のシステムメッセージへ追記）、モデル、クライアントの所有
+- `GitHubCopilotHost.CreateSessionConfig(tools, marshaller?, options?)` は `Create` が使うセッション設定。アプリが設定を足して `GitHubCopilotAgent` を直接作るときに使ってよい
+- ツールは `AIFunction` に限る。`AIFunction` でないもの、承認付き（`ApprovalRequiredAIFunction`）、名前の重複は `ArgumentException`。承認 UI が無いまま許可の判定で素通しにしないため
+
 必ず行うこと（既定）:
 
 1. CLI 組み込みのファイル／シェル／MCP ツールを出さない（`CopilotClientMode.Empty` 相当）。モデルに見えるのはアプリが渡したツールだけ
