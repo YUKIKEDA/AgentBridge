@@ -11,7 +11,7 @@ Human-oriented guide: [`setup.md`](setup.md). Process: [`AGENTS.md`](../AGENTS.m
 3. **Do not unset** `HTTP_PROXY` / `HTTPS_PROXY` / `http_proxy` / `https_proxy`. Network already works via proxy. Leave apt proxy config as-is.
 4. Use non-interactive apt: `DEBIAN_FRONTEND=noninteractive` and `apt-get -y`.
 5. After bootstrap, **continue the original task**. Bootstrap is a prerequisite, not a deliverable by itself.
-6. WPF work (`src/AgentBridge.Wpf`, `tests/AgentBridge.Wpf.Tests`) requires Windows. On Linux, skip it and verify Core only.
+6. WPF work (`src/AgentBridge.Wpf`, `tests/AgentBridge.Wpf.Tests`, `samples/AgentBridge.WpfChat`) requires Windows. On Linux, skip it and verify Core only.
 7. Do not create `.sln` files. The solution is `AgentBridge.slnx` only.
 
 ## 0. Decide the path

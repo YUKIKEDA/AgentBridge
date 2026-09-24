@@ -7,4 +7,7 @@
     <Project Path="tests/AgentBridge.Core.Tests/AgentBridge.Core.Tests.csproj" />
     <Project Path="tests/AgentBridge.Wpf.Tests/AgentBridge.Wpf.Tests.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/AgentBridge.WpfChat/AgentBridge.WpfChat.csproj" />
+  </Folder>
 </Solution>

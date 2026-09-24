@@ -51,10 +51,9 @@
 
 **Done:** サンプルが OpenAI 互換 `IChatClient` とダミー／少数ツールでストリーム表示と Stop ができる。見た目はライブラリに含めない。
 
-**Issues（予定）:**
+**Issues:**
 
-- `feat(samples):` 最小 WPF チャット（ストリームと Stop）
-- `docs:` サンプルの実行手順
+- https://github.com/YUKIKEDA/AgentBridge/issues/23 — 最小 WPF チャットと実行手順（本マイルストーンを 1 Issue にまとめる）
 
 ## 後続（このロードマップの M 番号は付けない）
 
